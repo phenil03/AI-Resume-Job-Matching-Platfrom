@@ -2,6 +2,10 @@ from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 from routers import resume, jobs, apply
+import subprocess, sys
+
+# Ensure spaCy model is downloaded
+subprocess.run([sys.executable, "-m", "spacy", "download", "en_core_web_sm"], check=False)
 
 app = FastAPI(
     title="JobApplyAI - AI Resume Matching Platform",

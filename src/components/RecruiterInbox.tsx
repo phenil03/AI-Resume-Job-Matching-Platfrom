@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mail, User, Briefcase, Calendar, CheckCircle, Clock, AlertCircle, TrendingUp, X } from 'lucide-react';
+import { Mail, User, Clock, Copy, Check, Send } from 'lucide-react';
 
 interface Message {
   id: number;
@@ -57,6 +57,8 @@ interface Props {
 export default function RecruiterInbox({ onUnreadCount }: Props) {
   const [messages, setMessages] = useState<Message[]>(MOCK_MESSAGES);
   const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [copiedId, setCopiedId] = useState<number | null>(null);
+  const [drafts, setDrafts] = useState<Record<number, string>>({});
 
   useEffect(() => {
     const unread = messages.filter(m => !m.isRead).length;
@@ -67,6 +69,53 @@ export default function RecruiterInbox({ onUnreadCount }: Props) {
     setMessages(prev => prev.map(m => 
       m.id === id ? { ...m, isRead: true } : m
     ));
+  };
+
+  const getRecruiterEmail = (message: Message) =>
+    `recruiter@${message.company.toLowerCase().replace(/\s+/g, '')}.ai`;
+
+  const generateReply = (message: Message) => {
+    if (message.status === 'Interview Request') {
+      return `Hi ${message.recruiterName},
+
+Thank you for reaching out regarding the ${message.jobTitle} role at ${message.company}. I appreciate your message and would be happy to discuss the opportunity further.
+
+I am available for the next steps and would be glad to join a technical introduction call. Please share the meeting details and any preparation instructions.
+
+Best regards,
+[Your Name]`;
+    }
+
+    if (message.status === 'Interested' || message.status === 'Follow Up') {
+      return `Hi ${message.recruiterName},
+
+Thank you for the update regarding the ${message.jobTitle} role at ${message.company}. I appreciate your consideration and remain very interested in the opportunity.
+
+Please let me know if you need any additional information from my side. I would be happy to continue with the next steps.
+
+Best regards,
+[Your Name]`;
+    }
+
+    return `Hi ${message.recruiterName},
+
+Thank you for letting me know about the update for the ${message.jobTitle} role at ${message.company}. I appreciate your time and consideration.
+
+I would be grateful if you could keep me in mind for future opportunities that align with my background.
+
+Best regards,
+[Your Name]`;
+  };
+
+  const copyReply = async (message: Message) => {
+    const replyText = drafts[message.id] || generateReply(message);
+    try {
+      await navigator.clipboard.writeText(replyText);
+      setCopiedId(message.id);
+      window.setTimeout(() => setCopiedId(current => current === message.id ? null : current), 1800);
+    } catch (error) {
+      console.error('Copy failed:', error);
+    }
   };
 
   const getStatusBadge = (status: Message['status']) => {
@@ -85,7 +134,14 @@ export default function RecruiterInbox({ onUnreadCount }: Props) {
 
   return (
     <div className="space-y-4">
-      {messages.map((message) => (
+      {messages.map((message) => {
+        const replyText = drafts[message.id] ?? generateReply(message);
+        const emailSubject = encodeURIComponent(`Regarding my application for ${message.jobTitle}`);
+        const emailBody = encodeURIComponent(replyText);
+        const emailHref = `mailto:${getRecruiterEmail(message)}?subject=${emailSubject}&body=${emailBody}`;
+        const gmailHref = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(getRecruiterEmail(message))}&su=${emailSubject}&body=${emailBody}`;
+
+        return (
         <motion.div
           key={message.id}
           layout
@@ -156,12 +212,46 @@ export default function RecruiterInbox({ onUnreadCount }: Props) {
                     <p className="text-white/80 leading-relaxed mb-6 bg-slate-900/50 p-4 rounded-xl border border-white/5 italic">
                       "{message.fullMessage}"
                     </p>
-                    <div className="flex items-center gap-3">
-                      <a 
-                        href={`mailto:recruiter@${message.company.toLowerCase().replace(' ', '')}.ai?subject=Regarding my application for ${message.jobTitle}`}
-                        className="px-6 py-2.5 bg-blue-500 hover:bg-blue-600 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-blue-500/20"
+                    <div className="mb-5">
+                      <div className="flex items-center justify-between gap-3 mb-2">
+                        <h4 className="text-sm font-bold text-white/80">Suggested Reply</h4>
+                        <span className="text-[10px] uppercase tracking-widest text-white/30">Editable Template</span>
+                      </div>
+                      <textarea
+                        value={replyText}
+                        onClick={(e) => e.stopPropagation()}
+                        onChange={(e) => setDrafts(prev => ({ ...prev, [message.id]: e.target.value }))}
+                        className="w-full min-h-[190px] resize-none bg-slate-950/60 border border-white/10 rounded-xl p-4 text-sm leading-relaxed text-white/80 outline-none"
+                      />
+                    </div>
+                    <div className="flex flex-wrap items-center gap-3">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          copyReply(message);
+                        }}
+                        className="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-emerald-500/20 inline-flex items-center gap-2"
                       >
-                        Reply via Email
+                        {copiedId === message.id ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                        {copiedId === message.id ? 'Copied' : 'Copy Reply'}
+                      </button>
+                      <a 
+                        href={gmailHref}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="px-5 py-2.5 bg-blue-500 hover:bg-blue-600 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-blue-500/20 inline-flex items-center gap-2"
+                      >
+                        <Send className="w-4 h-4" />
+                        Open Gmail
+                      </a>
+                      <a 
+                        href={emailHref}
+                        onClick={(e) => e.stopPropagation()}
+                        className="px-5 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-xs font-bold transition-all inline-flex items-center gap-2"
+                      >
+                        <Mail className="w-4 h-4" />
+                        Other Mail
                       </a>
                       <button 
                         onClick={(e) => {
@@ -173,13 +263,17 @@ export default function RecruiterInbox({ onUnreadCount }: Props) {
                         Close
                       </button>
                     </div>
+                    <p className="mt-3 text-[11px] text-white/35">
+                      `Open Gmail` creates a ready-to-send draft in your logged-in Gmail browser session.
+                    </p>
                   </div>
                 </motion.div>
               )}
             </AnimatePresence>
           </div>
         </motion.div>
-      ))}
+        );
+      })}
     </div>
   );
 }

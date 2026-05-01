@@ -86,8 +86,9 @@ export default async function handler(req, res) {
 
     if (req.method === 'GET') {
       const { resume_id } = req.query;
-      const query = supabase.from('job_matches').select('*').order('match_score', { ascending: false });
-      if (resume_id) query.eq('resume_id', parseInt(resume_id));
+      // NOTE: Supabase builder is immutable — must reassign to apply filters
+      let query = supabase.from('job_matches').select('*').order('match_score', { ascending: false });
+      if (resume_id) query = query.eq('resume_id', parseInt(resume_id));
       
       const { data, error } = await query;
       if (error) throw error;

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useEffectEvent, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Briefcase, MapPin, DollarSign, IndianRupee, TrendingUp, Loader2, ArrowRight, Globe, ExternalLink } from 'lucide-react';
 
@@ -28,16 +28,12 @@ export default function JobMatches({ resumeId, onComplete }: Props) {
   const [matches, setMatches] = useState<JobMatch[]>([]);
   const [fetchStatus, setFetchStatus] = useState('');
 
-  useEffect(() => {
-    fetchMatches();
-  }, []);
-
-  const fetchMatches = async () => {
+  const fetchMatches = useEffectEvent(async () => {
     setLoading(true);
     try {
-      // Fetch REAL jobs from the internet
       setFetchStatus('Searching job portals...');
       console.log('Fetching real jobs from multiple sources...');
+
       const fetchRes = await fetch(`${API_BASE}/api/fetch-real-jobs`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -45,48 +41,99 @@ export default function JobMatches({ resumeId, onComplete }: Props) {
       });
 
       if (!fetchRes.ok) {
-        console.error('Failed to fetch real jobs');
+        const errText = await fetchRes.text();
+        console.error('Failed to fetch real jobs:', errText);
         throw new Error('Failed to fetch jobs');
       }
 
       const fetchData = await fetchRes.json();
-      console.log(`Fetched ${fetchData.count || 0} real jobs from the internet`);
-      setFetchStatus(`Found ${fetchData.count || 0} real jobs!`);
+      console.log('fetch-real-jobs response:', fetchData);
+      const jobCount = fetchData.count || fetchData.jobs?.length || 0;
+      setFetchStatus(`Found ${jobCount} real jobs!`);
 
-      // Then fetch them from database
+      if (Array.isArray(fetchData.jobs) && fetchData.jobs.length > 0) {
+        setMatches(fetchData.jobs);
+      }
+
       const res = await fetch(`${API_BASE}/api/job-matches?resume_id=${resumeId}`);
       if (res.ok) {
         const data = await res.json();
-        setMatches(data);
+        console.log('job-matches from DB:', data.length, 'jobs');
+        if (Array.isArray(data) && data.length > 0) {
+          setMatches(data);
+        }
       }
     } catch (err) {
       console.error('Fetch error:', err);
-      setFetchStatus('Error fetching jobs');
+      setFetchStatus('Error fetching jobs - check console for details');
     } finally {
       setLoading(false);
     }
-  };
+  });
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      fetchMatches();
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
+  }, []);
 
   const getPortalColor = (portal: string) => {
     switch (portal) {
-      case 'adzuna': return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
-      case 'remoteok': return 'bg-green-500/20 text-green-400 border-green-500/30';
-      case 'arbeitnow': return 'bg-purple-500/20 text-purple-400 border-purple-500/30';
-      case 'naukri': return 'bg-blue-600/20 text-blue-400 border-blue-600/30';
-      case 'company_website': return 'bg-orange-500/20 text-orange-400 border-orange-500/30';
-      default: return 'bg-white/10 text-white/70 border-white/20';
+      case 'adzuna':
+      case 'adzuna_in':
+      case 'adzuna_us':
+      case 'adzuna_gb':
+        return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
+      case 'remoteok':
+        return 'bg-green-500/20 text-green-400 border-green-500/30';
+      case 'arbeitnow':
+        return 'bg-purple-500/20 text-purple-400 border-purple-500/30';
+      case 'remotive':
+        return 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30';
+      case 'naukri':
+        return 'bg-blue-600/20 text-blue-400 border-blue-600/30';
+      case 'company_website':
+        return 'bg-orange-500/20 text-orange-400 border-orange-500/30';
+      default:
+        return 'bg-white/10 text-white/70 border-white/20';
     }
   };
 
   const getPortalLabel = (portal: string) => {
     switch (portal) {
-      case 'adzuna': return 'Adzuna';
-      case 'remoteok': return 'RemoteOK';
-      case 'arbeitnow': return 'Arbeitnow';
-      case 'naukri': return 'Naukri.com';
-      case 'company_website': return 'Company Website';
-      default: return portal;
+      case 'adzuna':
+      case 'adzuna_in':
+      case 'adzuna_us':
+      case 'adzuna_gb':
+        return portal === 'adzuna_in' ? 'Adzuna India' : 'Adzuna';
+      case 'remoteok':
+        return 'RemoteOK';
+      case 'arbeitnow':
+        return 'Arbeitnow';
+      case 'remotive':
+        return 'Remotive';
+      case 'naukri':
+        return 'Naukri.com';
+      case 'company_website':
+        return 'Company Website';
+      default:
+        return portal;
     }
+  };
+
+  const cleanJobDescription = (value?: string) => {
+    if (!value) return '';
+
+    const textarea = document.createElement('textarea');
+    textarea.innerHTML = value;
+
+    return textarea.value
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/[^\x20-\x7E\n\r\t]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
   };
 
   return (
@@ -101,10 +148,10 @@ export default function JobMatches({ resumeId, onComplete }: Props) {
             Real Jobs in India & Global
           </h2>
           <div className="flex items-center justify-center gap-2 mb-4">
-             <span className="px-3 py-1 bg-green-500/20 text-green-400 border border-green-500/30 rounded-full text-[10px] font-bold uppercase tracking-wider">Region: India</span>
-             <span className="px-3 py-1 bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded-full text-[10px] font-bold uppercase tracking-wider">Source: Naukri.com</span>
+            <span className="px-3 py-1 bg-green-500/20 text-green-400 border border-green-500/30 rounded-full text-[10px] font-bold uppercase tracking-wider">Region: India</span>
+            <span className="px-3 py-1 bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded-full text-[10px] font-bold uppercase tracking-wider">Sources: Internet APIs</span>
           </div>
-          <p className="text-white/70">Live job listings from Naukri, Adzuna, and more</p>
+          <p className="text-white/70">Live India-first job listings from Adzuna India, Remotive, RemoteOK, and more</p>
           {fetchStatus && (
             <p className="text-sm text-green-400 mt-2">{fetchStatus}</p>
           )}
@@ -114,7 +161,7 @@ export default function JobMatches({ resumeId, onComplete }: Props) {
           <div className="text-center py-16">
             <Loader2 className="w-12 h-12 mx-auto mb-4 animate-spin text-blue-400" />
             <p className="text-white/70">Searching real job portals...</p>
-            <p className="text-sm text-white/50 mt-2">Fetching from Adzuna, RemoteOK, Arbeitnow...</p>
+            <p className="text-sm text-white/50 mt-2">Fetching from Adzuna India, Remotive, RemoteOK...</p>
           </div>
         ) : matches.length === 0 ? (
           <div className="text-center py-16">
@@ -125,7 +172,7 @@ export default function JobMatches({ resumeId, onComplete }: Props) {
           <div className="space-y-6">
             <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4 mb-6">
               <p className="text-green-300 text-sm text-center">
-                ✓ Found {matches.length} real job openings from live job portals
+                Found {matches.length} real job openings from live job portals
               </p>
             </div>
 
@@ -146,14 +193,14 @@ export default function JobMatches({ resumeId, onComplete }: Props) {
                           {job.source || getPortalLabel(job.portal)}
                         </span>
                         <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-tighter border ${
-                          job.job_type === 'Remote' 
-                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' 
+                          job.job_type === 'Remote'
+                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
                             : 'bg-sky-500/10 text-sky-400 border-sky-500/30'
                         }`}>
                           {job.job_type || 'On-site'}
                         </span>
                       </div>
-                      
+
                       <div className="flex items-center gap-6 text-sm text-white/70 mb-3">
                         <div className="flex items-center gap-2">
                           <Briefcase className="w-4 h-4" />
@@ -164,17 +211,17 @@ export default function JobMatches({ resumeId, onComplete }: Props) {
                           {job.location}
                         </div>
                         <div className="flex items-center gap-2">
-                          {(job.salary.includes('₹') || job.location.toLowerCase().includes('india')) ? (
+                          {(job.salary?.includes('₹') || job.location?.toLowerCase().includes('india')) ? (
                             <IndianRupee className="w-4 h-4" />
                           ) : (
                             <DollarSign className="w-4 h-4" />
                           )}
-                          {job.salary}
+                          {job.salary || 'Competitive'}
                         </div>
                       </div>
 
                       {job.description && (
-                        <p className="text-xs text-white/60 mb-3 line-clamp-2">{job.description}</p>
+                        <p className="text-xs text-white/60 mb-3 line-clamp-2">{cleanJobDescription(job.description)}</p>
                       )}
 
                       <div className="flex items-center gap-4 mb-3">

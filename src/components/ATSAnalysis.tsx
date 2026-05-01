@@ -32,18 +32,31 @@ export default function ATSAnalysis({ resume, onComplete }: Props) {
 
   const analyzeResume = async () => {
     setAnalyzing(true);
+    const apiTarget = `${API_BASE}/api/ats-analyze`;
+    console.log('🚀 [DEBUG] Initiating Analysis...');
+    console.log('📡 [DEBUG] Target URL:', apiTarget);
+    console.log('🕒 [DEBUG] Request Time:', new Date().toLocaleTimeString());
+    
     try {
-      const res = await fetch(`${API_BASE}/api/ats-analyze`, {
+      const res = await fetch(apiTarget, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ resume_id: resume.id })
       });
       
-      if (res.ok) {
-        const data = await res.json();
-        setResult(data);
-        setAnalyzing(false);
+      const data = await res.json();
+      console.log('🔍 [DEBUG] ATS Response:', data);
+
+      if (res.ok && data.score !== undefined) {
+        setResult({
+          score: data.score,
+          suggestions: data.suggestions || [],
+          keywords_found: data.keywords_found || []
+        });
+      } else {
+        console.error('ATS API error:', data);
       }
+      setAnalyzing(false);
 
     } catch (err) {
       console.error('Analysis error:', err);
@@ -75,7 +88,12 @@ export default function ATSAnalysis({ resume, onComplete }: Props) {
           <h2 className="text-3xl font-bold mb-3 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
             ATS Score Analysis
           </h2>
-          <p className="text-white/70">Analyzing your resume against ATS systems</p>
+          <p className="text-white/70">
+            Analyzing your resume against ATS systems 
+            <span className="ml-2 px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 text-xs font-mono border border-blue-500/30">
+              Live-Session: {Math.floor(Date.now() / 1000).toString().slice(-4)}
+            </span>
+          </p>
         </div>
 
         {analyzing ? (

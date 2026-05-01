@@ -12,7 +12,7 @@ interface JobMatch {
 
 interface ApplyResult {
   job_match_id: number;
-  application_id: number;
+  application_id?: number;
   success: boolean;
   message: string;
 }
@@ -29,7 +29,7 @@ export default function AutoApply({ resumeId, onComplete }: Props) {
   const [selectedJobs, setSelectedJobs] = useState<number[]>([]);
   const [applying, setApplying] = useState(false);
   const [results, setResults] = useState<ApplyResult[]>([]);
-  const [currentApplying, setCurrentApplying] = useState<number | null>(null);
+  const [applyError, setApplyError] = useState<string>('');
 
   useEffect(() => {
     fetchJobs();
@@ -48,6 +48,24 @@ export default function AutoApply({ resumeId, onComplete }: Props) {
     }
   };
 
+  const submitAutoApply = async (endpoint: string) => {
+    const res = await fetch(`${API_BASE}${endpoint}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        job_match_ids: selectedJobs,
+        resume_id: resumeId
+      })
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}));
+      throw new Error(errorData.error || `Request failed for ${endpoint}`);
+    }
+
+    return res.json();
+  };
+
   const toggleJob = (id: number) => {
     setSelectedJobs(prev => 
       prev.includes(id) ? prev.filter(j => j !== id) : [...prev, id]
@@ -59,28 +77,23 @@ export default function AutoApply({ resumeId, onComplete }: Props) {
     
     setApplying(true);
     setResults([]);
+    setApplyError('');
 
     try {
-      console.log(`Starting auto-apply for ${selectedJobs.length} real jobs...`);
-      // We use a shorter timeout or parallel calls in the backend to prevent frontend loops
-      const res = await fetch(`${API_BASE}/api/auto-apply-real`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          job_match_ids: selectedJobs,
-          resume_id: resumeId
-        })
-      });
-      
-      if (res.ok) {
-        const data = await res.json();
-        setResults(data.results || []);
-      } else {
-        const errorData = await res.json().catch(() => ({}));
-        console.error('Apply failed:', errorData.error || 'Unknown error');
+      console.log(`Starting auto-apply for ${selectedJobs.length} job(s)...`);
+
+      let data;
+      try {
+        data = await submitAutoApply('/api/auto-apply-real');
+      } catch (realErr) {
+        console.warn('Real auto-apply endpoint failed, falling back to standard auto-apply:', realErr);
+        data = await submitAutoApply('/api/auto-apply');
       }
+
+      setResults(data.results || []);
     } catch (err) {
       console.error('Apply error:', err);
+      setApplyError(err instanceof Error ? err.message : 'Unable to apply to the selected jobs right now.');
     } finally {
       setApplying(false);
     }
@@ -106,6 +119,12 @@ export default function AutoApply({ resumeId, onComplete }: Props) {
 
         {!applying && results.length === 0 ? (
           <div className="space-y-6">
+            {applyError && (
+              <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 text-sm text-red-300">
+                {applyError}
+              </div>
+            )}
+
             <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-4 flex items-start gap-3">
               <AlertCircle className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
               <div className="text-sm text-blue-300">
@@ -120,6 +139,12 @@ export default function AutoApply({ resumeId, onComplete }: Props) {
             </div>
 
             <div className="space-y-3">
+              {jobs.length === 0 && (
+                <div className="bg-white/5 border border-white/10 rounded-xl p-5 text-center text-white/60">
+                  No eligible jobs found yet. Go back to Job Matches and fetch jobs first.
+                </div>
+              )}
+
               {jobs.map((job, i) => (
                 <motion.div
                   key={job.id}

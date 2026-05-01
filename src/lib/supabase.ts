@@ -4,11 +4,22 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://your-project.supabase.co';
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'your-anon-key';
 
+const hasRealSupabaseUrl =
+  Boolean(supabaseUrl) &&
+  supabaseUrl !== 'https://your-project.supabase.co' &&
+  !supabaseUrl.includes('your-project') &&
+  /^https:\/\/.+\.supabase\.co$/i.test(supabaseUrl);
+
+const hasRealSupabaseKey =
+  Boolean(supabaseAnonKey) &&
+  supabaseAnonKey !== 'your-anon-key' &&
+  supabaseAnonKey !== 'your-anon-key-here';
+
 // Mock client for local development if keys are missing
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // Helper to check if Supabase is properly configured with real keys
-export const isSupabaseConfigured = supabaseUrl !== 'https://your-project.supabase.co';
+export const isSupabaseConfigured = hasRealSupabaseUrl && hasRealSupabaseKey;
 
 /**
  * PRO TIP: To enable real Google Auth:

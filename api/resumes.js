@@ -1,5 +1,5 @@
 import supabase, { ensureAwake } from './_supabase.js';
-import pdf from 'pdf-parse';
+import { getResumeText } from './_text-utils.js';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -25,18 +25,17 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Missing filename or content' });
       }
 
-      let extractedText = content;
+      const extractedText = await getResumeText({
+        content,
+        filename,
+        fileType: file_type,
+        isBinary: is_binary,
+      });
 
-      if (is_binary && (file_type.includes('pdf') || filename.toLowerCase().endsWith('.pdf'))) {
-        try {
-          const buffer = Buffer.from(content, 'base64');
-          const data = await pdf(buffer);
-          extractedText = data.text;
-          console.log(`Successfully parsed PDF: ${filename} (${extractedText.length} chars)`);
-        } catch (parseError) {
-          console.error('PDF parsing error:', parseError);
-          // Fallback to original content if parsing fails
-        }
+      if (!extractedText) {
+        return res.status(400).json({
+          error: 'Could not extract readable text from this file. Please upload a text-based PDF or TXT resume.',
+        });
       }
 
       const { data, error } = await supabase
@@ -65,4 +64,3 @@ export default async function handler(req, res) {
     res.status(500).json({ error: err.message });
   }
 }
-

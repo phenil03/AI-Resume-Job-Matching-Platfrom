@@ -11,6 +11,7 @@ import Auth from './components/Auth';
 import RecruiterInbox from './components/RecruiterInbox';
 import InterviewTracker from './components/InterviewTracker';
 import ApplicationDashboard from './components/ApplicationDashboard';
+import { isSupabaseConfigured, supabase } from './lib/supabase';
 
 type Step = 'upload' | 'ats' | 'matches' | 'apply';
 
@@ -38,6 +39,30 @@ const LoadingFallback = () => (
   </div>
 );
 
+const normalizeUser = (rawUser: any): User => ({
+  id: String(rawUser?.id || ''),
+  email: rawUser?.email || '',
+  user_metadata: {
+    full_name:
+      rawUser?.user_metadata?.full_name ||
+      rawUser?.user_metadata?.name ||
+      rawUser?.identities?.[0]?.identity_data?.full_name ||
+      rawUser?.identities?.[0]?.identity_data?.name ||
+      '',
+    avatar_url:
+      rawUser?.user_metadata?.avatar_url ||
+      rawUser?.user_metadata?.picture ||
+      rawUser?.identities?.[0]?.identity_data?.avatar_url ||
+      rawUser?.identities?.[0]?.identity_data?.picture ||
+      ''
+  }
+});
+
+const getDisplayName = (user: User | null) => {
+  if (!user) return '';
+  return user.user_metadata.full_name || user.email.split('@')[0] || 'Member';
+};
+
 function App() {
   const [currentStep, setCurrentStep] = useState<Step>('upload');
   const [selectedResume, setSelectedResume] = useState<Resume | null>(null);
@@ -48,12 +73,46 @@ function App() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [dashboardTab, setDashboardTab] = useState<'inbox' | 'tracker' | 'history'>('inbox');
 
-  // Auto-detect login state (simulated)
+  // Restore local/demo user or real Supabase session.
   useEffect(() => {
     const savedUser = localStorage.getItem('user');
     if (savedUser) {
       setUser(JSON.parse(savedUser));
     }
+
+    if (!isSupabaseConfigured) return;
+
+    let mounted = true;
+
+    supabase.auth.getSession().then(({ data }) => {
+      if (!mounted) return;
+      const sessionUser = data.session?.user;
+      if (sessionUser) {
+        const normalized = normalizeUser(sessionUser);
+        setUser(normalized);
+        localStorage.setItem('user', JSON.stringify(normalized));
+      }
+    });
+
+    const {
+      data: { subscription }
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!mounted) return;
+      const sessionUser = session?.user;
+      if (sessionUser) {
+        const normalized = normalizeUser(sessionUser);
+        setUser(normalized);
+        localStorage.setItem('user', JSON.stringify(normalized));
+      } else {
+        setUser(null);
+        localStorage.removeItem('user');
+      }
+    });
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const steps = [
@@ -87,8 +146,9 @@ function App() {
   };
 
   const handleLoginSuccess = (userData: User) => {
-    setUser(userData);
-    localStorage.setItem('user', JSON.stringify(userData));
+    const normalized = normalizeUser(userData);
+    setUser(normalized);
+    localStorage.setItem('user', JSON.stringify(normalized));
     setShowAuthModal(false);
     // If they were trying to apply, move them forward
     if (currentStep === 'matches') {
@@ -96,7 +156,12 @@ function App() {
     }
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    if (isSupabaseConfigured) {
+      await supabase.auth.signOut().catch((error) => {
+        console.error('Sign-out failed:', error);
+      });
+    }
     setUser(null);
     localStorage.removeItem('user');
     setCurrentStep('upload');
@@ -170,11 +235,12 @@ function App() {
             {user ? (
               <div className="flex items-center gap-3 pl-3 pr-2 py-2 bg-white/5 border border-white/10 rounded-2xl">
                 <div className="text-right hidden sm:block">
-                  <p className="text-xs font-bold text-white/80">{user.user_metadata.full_name}</p>
+                  <p className="text-xs font-bold text-white/80">{getDisplayName(user)}</p>
+                  <p className="text-[10px] text-white/35 truncate max-w-[180px]">{user.email}</p>
                   <p className="text-[9px] font-medium text-white/30 uppercase tracking-wider">Premium Member</p>
                 </div>
                 <div className="w-8 h-8 bg-blue-500 rounded-xl flex items-center justify-center text-xs font-black shadow-lg shadow-blue-500/20 cursor-pointer" onClick={() => setShowDashboard(true)}>
-                  {user.user_metadata.full_name?.[0].toUpperCase()}
+                  {getDisplayName(user)[0]?.toUpperCase() || 'U'}
                 </div>
                 <button 
                   onClick={handleLogout}

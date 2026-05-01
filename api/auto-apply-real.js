@@ -83,8 +83,6 @@ export default async function handler(req, res) {
         .eq('id', resume_id)
         .single();
 
-      const results = [];
-
       // Parallelize application processing for real-time performance
       const applicationPromises = job_match_ids.map(async (jobMatchId) => {
         const { data: jobMatch } = await supabase

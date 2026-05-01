@@ -63,13 +63,20 @@ def extract_name(text: str) -> str:
             return ent.text
     return "Candidate Name"
 
+def extract_keywords_from_resume(text):
+    doc = nlp(text)
+    keywords = set()
+    for ent in doc.ents:
+        if ent.label_ in ["ORG", "PRODUCT", "GPE", "WORK_OF_ART"]:
+            keywords.add(ent.text.lower().strip())
+    for chunk in doc.noun_chunks:
+        clean = chunk.text.lower().strip()
+        if 2 < len(clean) < 40 and clean.isascii():
+            keywords.add(clean)
+    return list(keywords)
+
 def extract_skills(text: str) -> list:
-    found = []
-    text_lower = text.lower()
-    for skill in SKILLS_LIST:
-        if skill.lower() in text_lower:
-            found.append(skill)
-    return list(set(found))
+    return extract_keywords_from_resume(text)
 
 def extract_education(text: str) -> list:
     found = []

@@ -7,12 +7,17 @@ import re
 # To download: python -m spacy download en_core_web_sm
 nlp = spacy.load("en_core_web_sm")
 
-SKILLS_LIST = [
-    "Python", "JavaScript", "React", "Node.js", "TypeScript", "FastAPI",
-    "SQL", "PostgreSQL", "NoSQL", "MongoDB", "AWS", "Docker", "Kubernetes",
-    "Tailwind", "CSS", "HTML", "Machine Learning", "Data Science", "Git",
-    "GitHub", "Next.js", "Java", "C++", "C#", "Azure", "GCP", "DevOps"
-]
+def extract_keywords_from_resume(text):
+    doc = nlp(text)
+    keywords = set()
+    for ent in doc.ents:
+        if ent.label_ in ["ORG", "PRODUCT", "GPE", "WORK_OF_ART"]:
+            keywords.add(ent.text.lower().strip())
+    for chunk in doc.noun_chunks:
+        clean = chunk.text.lower().strip()
+        if 2 < len(clean) < 40 and clean.isascii():
+            keywords.add(clean)
+    return list(keywords)
 
 EDUCATION_KEYWORDS = ["Bachelor", "Master", "PhD", "B.Tech", "M.Tech", "B.Sc", "M.Sc", "Diploma"]
 
@@ -23,14 +28,8 @@ def parse_resume(file_content: bytes):
     for page in pdf_reader.pages:
         raw_text += page.extract_text() or ""
 
-    doc = nlp(raw_text)
-    
-    # Extract Skills
-    found_skills = []
-    text_lower = raw_text.lower()
-    for skill in SKILLS_LIST:
-        if skill.lower() in text_lower:
-            found_skills.append(skill)
+    # Extract Skills Dynamically
+    found_skills = extract_keywords_from_resume(raw_text)
 
     # Extract Experience
     # Look for patterns like "3 years", "5 months", "Experience: 4 years"

@@ -1,6 +1,21 @@
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
+import spacy
+
+nlp = spacy.load("en_core_web_sm")
+
+def extract_keywords_from_resume(text):
+    doc = nlp(text)
+    keywords = set()
+    for ent in doc.ents:
+        if ent.label_ in ["ORG", "PRODUCT", "GPE", "WORK_OF_ART"]:
+            keywords.add(ent.text.lower().strip())
+    for chunk in doc.noun_chunks:
+        clean = chunk.text.lower().strip()
+        if 2 < len(clean) < 40 and clean.isascii():
+            keywords.add(clean)
+    return list(keywords)
 
 SAMPLE_JOBS = [
     {"id": 1, "title": "Senior Frontend Engineer", "company": "Tech Innovators", "description": "Looking for expert in React, TypeScript, and Tailwind CSS. Experience with state management is a must.", "job_type": "Remote"},
@@ -22,17 +37,13 @@ def ats_score(resume_text, job_description):
     # Calculate Cosine Similarity
     score = cosine_similarity(tfidf_matrix[0:1], tfidf_matrix[1:2])[0][0]
     
-    # Simple keyword matching for additional metadata
-    resume_words = set(resume_text.lower().split())
-    job_words = set(job_description.lower().split())
+    # Dynamic keyword extraction for both resume and job
+    resume_keywords = set(extract_keywords_from_resume(resume_text))
+    job_keywords = set(extract_keywords_from_resume(job_description))
     
-    matched = list(job_words.intersection(resume_words))
-    missing = list(job_words.difference(resume_words))
+    matched = list(job_keywords.intersection(resume_keywords))
+    missing = list(job_keywords.difference(resume_keywords))
     
-    # Filter short words and common stop words implicitly by context
-    matched = [w for w in matched if len(w) > 3]
-    missing = [w for w in missing if len(w) > 3]
-
     return {
         "score": int(score * 100),
         "matched_keywords": matched[:10],

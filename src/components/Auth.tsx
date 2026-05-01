@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mail, Lock, User, Chrome, ArrowRight, Loader2, CheckCircle, Globe } from 'lucide-react';
+import { Lock, Chrome, Loader2, CheckCircle } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 
 interface AuthProps {
@@ -8,12 +8,43 @@ interface AuthProps {
   onCancel?: () => void;
 }
 
+interface DemoGoogleAccount {
+  id: string;
+  email: string;
+  user_metadata: {
+    full_name?: string;
+    avatar_url?: string;
+  };
+}
+
 export default function Auth({ onSuccess, onCancel }: AuthProps) {
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
-  const [googleStep, setGoogleStep] = useState(0); 
+  const [googleStep, setGoogleStep] = useState(0);
+  const [googleAccounts, setGoogleAccounts] = useState<DemoGoogleAccount[]>([]);
   const [formData, setFormData] = useState({ email: '', password: '', name: '' });
   const [error, setError] = useState<string | null>(null);
+
+  const normalizeDemoUser = (user: any) => ({
+    id: user?.id || `demo-${Date.now()}`,
+    email: user?.email || formData.email || 'demo@jobapplyai.dev',
+    user_metadata: {
+      full_name:
+        user?.user_metadata?.full_name ||
+        user?.user_metadata?.name ||
+        user?.identities?.[0]?.identity_data?.full_name ||
+        user?.identities?.[0]?.identity_data?.name ||
+        user?.full_name ||
+        formData.name ||
+        '',
+      avatar_url:
+        user?.user_metadata?.avatar_url ||
+        user?.user_metadata?.picture ||
+        user?.identities?.[0]?.identity_data?.avatar_url ||
+        user?.identities?.[0]?.identity_data?.picture ||
+        ''
+    }
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,6 +52,24 @@ export default function Auth({ onSuccess, onCancel }: AuthProps) {
     setError(null);
     
     try {
+      if (!isSupabaseConfigured) {
+        const endpoint = isLogin ? '/api/auth/login' : '/api/auth/signup';
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData)
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error || 'Unable to continue with demo sign-in.');
+        }
+
+        const mockData = await response.json();
+        onSuccess(normalizeDemoUser(mockData.user));
+        return;
+      }
+
       // Standard Supabase Auth Pattern
       const { data, error: authError } = isLogin 
         ? await supabase.auth.signInWithPassword({ email: formData.email, password: formData.password })
@@ -31,26 +80,12 @@ export default function Auth({ onSuccess, onCancel }: AuthProps) {
           });
 
       if (authError) {
-        // Fallback to Mock API if Supabase isn't configured for this local demo
-        console.log('Supabase not configured, falling back to Mock DB');
-        const endpoint = isLogin ? '/api/auth/login' : '/api/auth/signup';
-        const response = await fetch(endpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(formData)
-        });
-        
-        if (response.ok) {
-          const mockData = await response.json();
-          onSuccess(mockData.user);
-        } else {
-          setError(authError.message);
-        }
+        throw authError;
       } else if (data.user) {
-        onSuccess(data.user);
+        onSuccess(normalizeDemoUser(data.user));
       }
     } catch (err) {
-      setError('Connection failed.');
+      setError(err instanceof Error ? err.message : 'Connection failed.');
     } finally {
       setLoading(false);
     }
@@ -58,7 +93,7 @@ export default function Auth({ onSuccess, onCancel }: AuthProps) {
 
   const handleGoogleSignIn = async () => {
     setLoading(true);
-    setGoogleStep(1); 
+    setGoogleStep(1);
     setError(null);
     
     try {
@@ -66,25 +101,61 @@ export default function Auth({ onSuccess, onCancel }: AuthProps) {
         // PROPER SUPABASE GOOGLE AUTH CALL (Only if keys are present)
         const { error: authError } = await supabase.auth.signInWithOAuth({
           provider: 'google',
-          options: { redirectTo: window.location.origin }
+          options: {
+            redirectTo: window.location.origin,
+            queryParams: {
+              prompt: 'select_account',
+              access_type: 'offline'
+            }
+          }
         });
         if (authError) throw authError;
       } else {
-        // Fallback to high-end mock behavior for the preview
-        console.log('Using proper mock sequence (Supabase keys not detected in .env)');
-        await new Promise(r => setTimeout(r, 2000));
-        const res = await fetch('/api/auth/google', { method: 'POST' });
-        if (res.ok) {
-          const data = await res.json();
-          setGoogleStep(2);
-          setTimeout(() => onSuccess(data.user), 1000);
+        const res = await fetch('/api/auth/google-accounts');
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({}));
+          throw new Error(errorData.error || 'Google Sign-In failed.');
         }
+
+        const data = await res.json();
+        setGoogleAccounts(Array.isArray(data.accounts) ? data.accounts : []);
+        setGoogleStep(3);
+        setLoading(false);
       }
     } catch (err: any) {
       setError(err.message || 'Google Sign-In failed.');
       setGoogleStep(0);
-    } finally {
-      if (!isSupabaseConfigured) setLoading(false);
+      setLoading(false);
+    }
+  };
+
+  const handleDemoGoogleAccountSelect = async (account: DemoGoogleAccount) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const res = await fetch('/api/auth/google', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: account.email })
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Unable to sign in with the selected Google account.');
+      }
+
+      const data = await res.json();
+      setGoogleStep(2);
+      setTimeout(() => {
+        onSuccess(normalizeDemoUser(data.user));
+        setLoading(false);
+        setGoogleStep(0);
+      }, 250);
+    } catch (err: any) {
+      setError(err.message || 'Google Sign-In failed.');
+      setGoogleStep(3);
+      setLoading(false);
     }
   };
 
@@ -124,6 +195,49 @@ export default function Auth({ onSuccess, onCancel }: AuthProps) {
               </div>
               <h3 className="text-2xl font-black mb-1 text-white">Verified</h3>
               <p className="text-white/30 text-xs uppercase tracking-widest font-bold">Profile Synchronized</p>
+            </motion.div>
+          ) : googleStep === 3 ? (
+            <motion.div key="g3" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <div className="text-center mb-8">
+                <div className="inline-flex items-center gap-2 bg-blue-500/10 px-3 py-1 rounded-full border border-blue-500/20 mb-6">
+                  <Lock className="w-3 h-3 text-blue-400" />
+                  <span className="text-[9px] font-black text-blue-400 uppercase tracking-widest">Choose Account</span>
+                </div>
+                <h3 className="text-3xl font-black mb-2 tracking-tighter text-white">Select Google Account</h3>
+                <p className="text-white/30 text-sm font-medium">Pick the profile you want to use in this app.</p>
+              </div>
+
+              <div className="space-y-3">
+                {googleAccounts.map((account) => {
+                  const displayName = account.user_metadata.full_name || account.email.split('@')[0];
+                  return (
+                    <button
+                      key={account.id}
+                      onClick={() => handleDemoGoogleAccountSelect(account)}
+                      disabled={loading}
+                      className="w-full p-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl flex items-center gap-4 text-left transition-all disabled:opacity-50"
+                    >
+                      <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center text-sm font-black shadow-lg shadow-blue-500/20">
+                        {displayName[0]?.toUpperCase() || 'G'}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-bold text-white truncate">{displayName}</p>
+                        <p className="text-xs text-white/40 truncate">{account.email}</p>
+                      </div>
+                    </button>
+                  );
+                })}
+
+                <button
+                  onClick={() => {
+                    setGoogleStep(0);
+                    setLoading(false);
+                  }}
+                  className="w-full py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl text-xs font-bold transition-all"
+                >
+                  Back
+                </button>
+              </div>
             </motion.div>
           ) : (
             <motion.div key="main">

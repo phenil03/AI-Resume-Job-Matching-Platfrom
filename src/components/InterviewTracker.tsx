@@ -133,7 +133,7 @@ export default function InterviewTracker() {
                 key={job.id}
                 layoutId={job.id}
                 draggable
-                onDragStart={e => onDragStart(e, job.id)}
+                onDragStartCapture={e => onDragStart(e, job.id)}
                 className="bg-white/5 border border-white/10 rounded-2xl p-5 cursor-grab active:cursor-grabbing group hover:bg-white/10 transition-all border-l-4 border-l-blue-500/40"
               >
                 <div className="flex justify-between items-start mb-3">
