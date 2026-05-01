@@ -1,6 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Target, TrendingUp, AlertCircle, CheckCircle, Loader2, ArrowRight } from 'lucide-react';
+import {
+  AlertCircle,
+  ArrowRight,
+  Briefcase,
+  CheckCircle,
+  Loader2,
+  RefreshCw,
+  Target,
+  TrendingUp
+} from 'lucide-react';
 
 interface Resume {
   id: number;
@@ -13,6 +22,19 @@ interface ATSResult {
   score: number;
   suggestions: string[];
   keywords_found: string[];
+  missing_keywords?: string[];
+  domain?: string;
+  seniority?: string;
+  breakdown?: Record<string, number>;
+  diagnostics?: {
+    sections_found?: string[];
+    sections_missing?: string[];
+    target_titles?: string[];
+    matched_titles?: string[];
+    required_years?: number | null;
+    estimated_years?: number | null;
+    parse_warnings?: string[];
+  };
 }
 
 interface Props {
@@ -25,41 +47,49 @@ const API_BASE = import.meta.env.VITE_BACKEND_URL || '';
 export default function ATSAnalysis({ resume, onComplete }: Props) {
   const [analyzing, setAnalyzing] = useState(true);
   const [result, setResult] = useState<ATSResult | null>(null);
+  const [jobDescription, setJobDescription] = useState('');
+  const [requestError, setRequestError] = useState<string | null>(null);
 
   useEffect(() => {
-    analyzeResume();
-  }, []);
+    analyzeResume('');
+  }, [resume.id]);
 
-  const analyzeResume = async () => {
+  const analyzeResume = async (overrideJobDescription?: string) => {
     setAnalyzing(true);
-    const apiTarget = `${API_BASE}/api/ats-analyze`;
-    console.log('🚀 [DEBUG] Initiating Analysis...');
-    console.log('📡 [DEBUG] Target URL:', apiTarget);
-    console.log('🕒 [DEBUG] Request Time:', new Date().toLocaleTimeString());
-    
+    setRequestError(null);
+
     try {
-      const res = await fetch(apiTarget, {
+      const res = await fetch(`${API_BASE}/api/ats-analyze`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ resume_id: resume.id })
+        body: JSON.stringify({
+          resume_id: resume.id,
+          job_description: overrideJobDescription ?? jobDescription
+        })
       });
-      
+
       const data = await res.json();
-      console.log('🔍 [DEBUG] ATS Response:', data);
 
       if (res.ok && data.score !== undefined) {
         setResult({
           score: data.score,
           suggestions: data.suggestions || [],
-          keywords_found: data.keywords_found || []
+          keywords_found: data.keywords_found || [],
+          missing_keywords: data.missing_keywords || [],
+          domain: data.domain,
+          seniority: data.seniority,
+          breakdown: data.breakdown || {},
+          diagnostics: data.diagnostics || {}
         });
       } else {
-        console.error('ATS API error:', data);
+        setResult(null);
+        setRequestError(data.error || 'ATS analysis failed.');
       }
-      setAnalyzing(false);
-
-    } catch (err) {
-      console.error('Analysis error:', err);
+    } catch (error) {
+      console.error('ATS analysis error:', error);
+      setResult(null);
+      setRequestError('Could not analyze this resume right now.');
+    } finally {
       setAnalyzing(false);
     }
   };
@@ -77,6 +107,12 @@ export default function ATSAnalysis({ resume, onComplete }: Props) {
     return 'Needs Improvement';
   };
 
+  const formatBreakdownLabel = (label: string) =>
+    label
+      .split('_')
+      .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(' ');
+
   return (
     <div className="max-w-5xl mx-auto">
       <motion.div
@@ -89,11 +125,40 @@ export default function ATSAnalysis({ resume, onComplete }: Props) {
             ATS Score Analysis
           </h2>
           <p className="text-white/70">
-            Analyzing your resume against ATS systems 
+            Weighted ATS scoring across keywords, sections, impact, titles, experience, and semantic relevance
             <span className="ml-2 px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 text-xs font-mono border border-blue-500/30">
               Live-Session: {Math.floor(Date.now() / 1000).toString().slice(-4)}
             </span>
           </p>
+        </div>
+
+        <div className="mb-6 bg-white/5 border border-white/10 rounded-xl p-5">
+          <div className="flex items-center gap-3 mb-3">
+            <Briefcase className="w-5 h-5 text-blue-400" />
+            <h3 className="text-lg font-semibold">Target Job Description</h3>
+          </div>
+          <p className="text-sm text-white/60 mb-3">
+            Paste a job description for the most accurate ATS score. Without it, the analyzer uses your resume&apos;s detected domain and role signals.
+          </p>
+          <textarea
+            value={jobDescription}
+            onChange={(e) => setJobDescription(e.target.value)}
+            placeholder="Paste the target job description here for exact ATS keyword, title, and experience scoring..."
+            className="w-full min-h-[140px] rounded-xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-blue-500/60"
+          />
+          <div className="mt-3 flex flex-wrap gap-3">
+            <button
+              onClick={() => analyzeResume()}
+              disabled={analyzing}
+              className="inline-flex items-center gap-2 rounded-xl bg-blue-500 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {analyzing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+              Re-run ATS Analysis
+            </button>
+            <p className="text-xs text-white/45 self-center">
+              Most companies auto-filter resumes below roughly 60 to 75.
+            </p>
+          </div>
         </div>
 
         {analyzing ? (
@@ -106,11 +171,10 @@ export default function ATSAnalysis({ resume, onComplete }: Props) {
               <Target className="w-12 h-12" />
             </motion.div>
             <h3 className="text-xl font-semibold mb-2">Analyzing Resume...</h3>
-            <p className="text-white/60">Checking keywords, formatting, and ATS compatibility</p>
+            <p className="text-white/60">Checking parse quality, keywords, section coverage, impact, titles, experience, and semantic fit</p>
           </div>
         ) : result ? (
           <div className="space-y-6">
-            {/* Score Display */}
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
@@ -127,10 +191,43 @@ export default function ATSAnalysis({ resume, onComplete }: Props) {
                 </div>
                 <h3 className="text-2xl font-bold mb-2">{getScoreLabel(result.score)}</h3>
                 <p className="text-white/70">Your resume is {result.score}% optimized for ATS systems</p>
+                {result.domain && (
+                  <p className="mt-2 text-sm text-blue-300/90">
+                    Detected domain: {result.domain.replace(/_/g, ' ')}
+                  </p>
+                )}
+                {result.seniority && (
+                  <p className="mt-1 text-sm text-cyan-300/90">
+                    Seniority profile: {result.seniority}
+                  </p>
+                )}
               </div>
             </motion.div>
 
-            {/* Keywords Found */}
+            {!!result.breakdown && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.15 }}
+                className="grid gap-3 md:grid-cols-2 xl:grid-cols-3"
+              >
+                {Object.entries(result.breakdown).map(([key, value]) => (
+                  <div key={key} className="bg-white/5 border border-white/10 rounded-xl p-4">
+                    <div className="flex items-center justify-between gap-3 mb-2">
+                      <p className="text-sm font-medium text-white/75">{formatBreakdownLabel(key)}</p>
+                      <span className="text-lg font-bold text-white">{value}</span>
+                    </div>
+                    <div className="h-2 rounded-full bg-white/10 overflow-hidden">
+                      <div
+                        className="h-full rounded-full bg-gradient-to-r from-blue-500 to-cyan-400"
+                        style={{ width: `${Math.min(100, value * 8)}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </motion.div>
+            )}
+
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -144,7 +241,7 @@ export default function ATSAnalysis({ resume, onComplete }: Props) {
               <div className="flex flex-wrap gap-2">
                 {result.keywords_found.map((keyword, i) => (
                   <motion.span
-                    key={i}
+                    key={`${keyword}-${i}`}
                     initial={{ opacity: 0, scale: 0 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: 0.3 + i * 0.05 }}
@@ -156,7 +253,30 @@ export default function ATSAnalysis({ resume, onComplete }: Props) {
               </div>
             </motion.div>
 
-            {/* Suggestions */}
+            {!!result.missing_keywords?.length && (
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.3 }}
+                className="bg-white/5 border border-white/10 rounded-xl p-6"
+              >
+                <div className="flex items-center gap-3 mb-4">
+                  <TrendingUp className="w-6 h-6 text-amber-400" />
+                  <h3 className="text-xl font-semibold">Missing ATS Keywords</h3>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {result.missing_keywords.map((keyword, i) => (
+                    <span
+                      key={`${keyword}-${i}`}
+                      className="px-3 py-1.5 bg-amber-500/15 border border-amber-500/30 rounded-lg text-sm text-amber-200"
+                    >
+                      {keyword}
+                    </span>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -170,7 +290,7 @@ export default function ATSAnalysis({ resume, onComplete }: Props) {
               <div className="space-y-3">
                 {result.suggestions.map((suggestion, i) => (
                   <motion.div
-                    key={i}
+                    key={`${suggestion}-${i}`}
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.5 + i * 0.1 }}
@@ -185,7 +305,48 @@ export default function ATSAnalysis({ resume, onComplete }: Props) {
               </div>
             </motion.div>
 
-            {/* Continue Button */}
+            {result.diagnostics && (
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.45 }}
+                className="bg-white/5 border border-white/10 rounded-xl p-6"
+              >
+                <div className="flex items-center gap-3 mb-4">
+                  <Target className="w-6 h-6 text-cyan-400" />
+                  <h3 className="text-xl font-semibold">ATS Diagnostics</h3>
+                </div>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="rounded-xl bg-white/5 p-4">
+                    <p className="text-sm font-semibold text-white mb-2">Detected Sections</p>
+                    <p className="text-sm text-white/70">
+                      {result.diagnostics.sections_found?.join(', ') || 'No clear sections detected'}
+                    </p>
+                  </div>
+                  <div className="rounded-xl bg-white/5 p-4">
+                    <p className="text-sm font-semibold text-white mb-2">Missing Sections</p>
+                    <p className="text-sm text-white/70">
+                      {result.diagnostics.sections_missing?.join(', ') || 'None'}
+                    </p>
+                  </div>
+                  <div className="rounded-xl bg-white/5 p-4">
+                    <p className="text-sm font-semibold text-white mb-2">Target Titles</p>
+                    <p className="text-sm text-white/70">
+                      {result.diagnostics.target_titles?.join(', ') || 'No target title extracted yet'}
+                    </p>
+                  </div>
+                  <div className="rounded-xl bg-white/5 p-4">
+                    <p className="text-sm font-semibold text-white mb-2">Experience Fit</p>
+                    <p className="text-sm text-white/70">
+                      Required: {result.diagnostics.required_years ?? 'Not specified'} years
+                      <br />
+                      Estimated from resume: {result.diagnostics.estimated_years ?? 'Not detected'} years
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
             <motion.button
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -199,7 +360,11 @@ export default function ATSAnalysis({ resume, onComplete }: Props) {
               <ArrowRight className="w-5 h-5" />
             </motion.button>
           </div>
-        ) : null}
+        ) : (
+          <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-200">
+            {requestError || 'No ATS result available.'}
+          </div>
+        )}
       </motion.div>
     </div>
   );

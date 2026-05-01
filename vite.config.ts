@@ -148,6 +148,237 @@ function detectDomain(lowerContent: string) {
   return sorted[0][1] > 0 ? sorted[0][0] : 'fullstack';
 }
 
+const ATS_WEIGHTS = {
+  keyword_match: 35,
+  work_experience_relevance: 25,
+  skills_match: 20,
+  education_certifications: 10,
+  title_alignment: 5,
+  formatting_parsability: 5
+};
+
+const ATS_SENIORITY_WEIGHT_PROFILES = {
+  fresher: {
+    keyword_match: 34,
+    work_experience_relevance: 22,
+    skills_match: 22,
+    education_certifications: 12,
+    title_alignment: 5,
+    formatting_parsability: 5
+  },
+  mid: ATS_WEIGHTS,
+  senior: {
+    keyword_match: 36,
+    work_experience_relevance: 28,
+    skills_match: 18,
+    education_certifications: 8,
+    title_alignment: 5,
+    formatting_parsability: 5
+  }
+};
+
+const ATS_ACTION_VERBS = [
+  'developed', 'led', 'managed', 'implemented', 'designed', 'optimized', 'scaled', 'architected',
+  'resolved', 'collaborated', 'increased', 'decreased', 'shipped', 'built', 'deployed', 'automated',
+  'analyzed', 'delivered', 'launched', 'created', 'improved', 'reduced', 'drove', 'owned'
+];
+
+const ATS_FILLER_TERMS = new Set([
+  'team', 'teams', 'work', 'working', 'role', 'roles', 'using', 'used', 'strong', 'good', 'excellent',
+  'knowledge', 'ability', 'responsible', 'responsibilities', 'candidate', 'preferred', 'requirement',
+  'requirements', 'qualification', 'qualifications', 'resume', 'job', 'description', 'experience'
+]);
+
+const ATS_PHRASE_NOISE_WORDS = new Set([
+  'will', 'with', 'from', 'into', 'their', 'your', 'our', 'the', 'and', 'for', 'you', 'who', 'this', 'that', 'preferred'
+]);
+
+const ATS_SOFT_SKILLS = [
+  'leadership', 'communication', 'collaboration', 'teamwork', 'stakeholder management', 'problem solving',
+  'analytical thinking', 'ownership', 'time management', 'adaptability', 'mentoring', 'presentation',
+  'cross-functional', 'attention to detail', 'client communication'
+];
+
+function clampScore(value: number, min: number, max: number) {
+  return Math.max(min, Math.min(max, value));
+}
+
+function normalizeAtsText(value = '') {
+  return String(value)
+    .replace(/\r/g, '\n')
+    .replace(/[ \t]+/g, ' ')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
+function getActiveAtsWeights(seniority: string) {
+  return ATS_SENIORITY_WEIGHT_PROFILES[seniority as keyof typeof ATS_SENIORITY_WEIGHT_PROFILES] || ATS_WEIGHTS;
+}
+
+function tokenizeForAts(text: string) {
+  return (text.toLowerCase().match(/[a-z0-9+#./-]{2,}/g) || []).filter(token => !ATS_FILLER_TERMS.has(token));
+}
+
+function splitAtsSentences(text: string) {
+  return normalizeAtsText(text)
+    .split(/(?<=[.!?])\s+|\n+/)
+    .map(part => part.trim())
+    .filter(Boolean);
+}
+
+function dedupeAts(values: string[]) {
+  const seen = new Set<string>();
+  return values.filter(value => {
+    const key = value.toLowerCase();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function isUsefulAtsKeywordPhrase(term: string) {
+  const words = term.toLowerCase().split(/\s+/).filter(Boolean);
+  if (words.length === 0 || words.length > 4) return false;
+  if (/[.]/.test(term)) return false;
+  if (words.some(word => ATS_PHRASE_NOISE_WORDS.has(word))) return false;
+  return true;
+}
+
+function getAtsSectionsMap(text: string) {
+  const normalized = normalizeAtsText(text);
+  const lines = normalized.split('\n');
+  const sections: Record<string, string> = {
+    contact: '',
+    summary: '',
+    experience: '',
+    skills: '',
+    education: '',
+    certifications: '',
+    projects: '',
+    other: ''
+  };
+
+  let current = 'other';
+  for (const rawLine of lines) {
+    const line = rawLine.trim();
+    if (!line) continue;
+
+    if (/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-z]{2,}|linkedin|github|portfolio|phone|mobile)/i.test(line)) current = 'contact';
+    else if (/(summary|profile|objective|about me|professional summary)/i.test(line)) current = 'summary';
+    else if (/(experience|employment|work history|professional experience|internship)/i.test(line)) current = 'experience';
+    else if (/(skills|technical skills|core competencies|technologies|tools|expertise)/i.test(line)) current = 'skills';
+    else if (/(education|degree|university|college|bachelor|master|b\.tech|m\.tech|graduate)/i.test(line)) current = 'education';
+    else if (/(certifications|certificates|certified)/i.test(line)) current = 'certifications';
+    else if (/(projects|project experience|case studies)/i.test(line)) current = 'projects';
+
+    sections[current] += `${line}\n`;
+  }
+
+  return sections;
+}
+
+function getJobKeywordsForAts(jobDescription: string, domainSkills: string[]) {
+  if (!jobDescription) {
+    return domainSkills.slice(0, 12);
+  }
+
+  const matchedDomainSkills = domainSkills.filter(skill => matchesSkill(jobDescription, skill));
+  const dynamicKeywords = extractDynamicKeywords(jobDescription, matchedDomainSkills, 24)
+    .filter((term: string) => term.length > 2)
+    .filter((term: string) => !ATS_FILLER_TERMS.has(term.toLowerCase()))
+    .filter((term: string) => /[A-Za-z]/.test(term));
+
+  return dedupeAts([
+    ...matchedDomainSkills,
+    ...domainSkills.filter(skill => dynamicKeywords.some((term: string) => matchesSkill(term, skill))),
+    ...dynamicKeywords.filter((term: string) => isUsefulAtsKeywordPhrase(term))
+  ]).slice(0, 18);
+}
+
+function getTargetTitlesForAts(sourceText: string, domain: string) {
+  const defaults = {
+    frontend: ['Frontend Developer', 'UI Developer', 'React Developer', 'Frontend Engineer'],
+    backend: ['Backend Developer', 'API Developer', 'Backend Engineer', 'Software Engineer'],
+    fullstack: ['Full Stack Developer', 'Software Engineer', 'Fullstack Engineer'],
+    devops: ['DevOps Engineer', 'Site Reliability Engineer', 'Cloud Engineer'],
+    data_science: ['Data Scientist', 'ML Engineer', 'AI Engineer'],
+    data_analyst: ['Data Analyst', 'Business Analyst', 'BI Analyst'],
+    design: ['UI Designer', 'UX Designer', 'Product Designer'],
+    mobile: ['Mobile Developer', 'Android Developer', 'iOS Developer'],
+    cybersecurity: ['Security Analyst', 'Cybersecurity Analyst', 'Security Engineer'],
+    database: ['Database Administrator', 'Database Engineer'],
+    product: ['Product Manager', 'Technical Product Manager'],
+    sales_marketing: ['Account Executive', 'Digital Marketing Specialist', 'Marketing Manager']
+  } as Record<string, string[]>;
+
+  const configured = (defaults[domain] || defaults.fullstack).filter(title => matchesSkill(sourceText, title));
+  if (configured.length > 0) return configured;
+
+  const titleRegex = /\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+){0,3}\s+(?:Developer|Engineer|Designer|Analyst|Manager|Specialist|Consultant|Architect))\b/g;
+  const discovered: string[] = [];
+  for (const match of sourceText.matchAll(titleRegex)) {
+    discovered.push(match[1]);
+  }
+
+  return dedupeAts([...(defaults[domain] || defaults.fullstack), ...discovered]).slice(0, 5);
+}
+
+function extractRequiredYearsForAts(jobDescription: string) {
+  const patterns = [
+    /(\d+)\+?\s*(?:to\s*\d+\s*)?(?:years|yrs)\s+(?:of\s+)?experience/i,
+    /minimum\s+of\s+(\d+)\s*(?:years|yrs)/i,
+    /at\s+least\s+(\d+)\s*(?:years|yrs)/i
+  ];
+
+  for (const pattern of patterns) {
+    const match = jobDescription.match(pattern);
+    if (match) return Number(match[1]);
+  }
+
+  return null;
+}
+
+function estimateResumeYearsForAts(resumeText: string) {
+  const explicit = resumeText.match(/(\d+)\+?\s*(?:years|yrs)\s+(?:of\s+)?experience/i);
+  if (explicit) return Number(explicit[1]);
+
+  const years = [...resumeText.matchAll(/\b(19|20)\d{2}\b/g)].map(match => Number(match[0]));
+  if (years.length >= 2) {
+    const minYear = Math.min(...years);
+    const maxYear = Math.max(...years);
+    return clampScore(maxYear - minYear, 0, 40);
+  }
+
+  return null;
+}
+
+function determineAtsSeniority(params: {
+  resumeText: string;
+  jobDescription: string;
+  estimatedYears: number | null;
+  requiredYears: number | null;
+}) {
+  const yearsSignal = Math.max(params.estimatedYears || 0, params.requiredYears || 0);
+
+  if (
+    yearsSignal <= 1 ||
+    /\b(fresher|entry level|entry-level|graduate|recent graduate|intern|internship|trainee|junior)\b/i.test(params.resumeText) ||
+    /\b(entry level|entry-level|graduate|intern|trainee|junior)\b/i.test(params.jobDescription)
+  ) {
+    return 'fresher';
+  }
+
+  if (
+    yearsSignal >= 6 ||
+    /\b(senior|lead|principal|staff|architect|manager|head)\b/i.test(params.resumeText) ||
+    /\b(senior|lead|principal|staff|architect|manager|head)\b/i.test(params.jobDescription)
+  ) {
+    return 'senior';
+  }
+
+  return 'mid';
+}
+
 function buildResumeSearchProfile(content: string) {
   const domain = detectDomain(content.toLowerCase());
   const domainSkills = DOMAINS[domain as keyof typeof DOMAINS].skills || [];
@@ -208,77 +439,184 @@ function rankStrictJob(job: { title?: string; description?: string; location?: s
   return Math.min(100, score);
 }
 
-function analyzeMockResume(content: string) {
-  const normalizedContent = content || '';
-  const primaryDomain = detectDomain(normalizedContent.toLowerCase());
-  const domainSkills = DOMAINS[primaryDomain as keyof typeof DOMAINS].skills;
-  const allPossibleSkills = Object.values(DOMAINS).flatMap(d => d.skills);
-  const uniqueSkills = [...new Set(allPossibleSkills)];
-  const matchedSkills = uniqueSkills.filter(skill => matchesSkill(normalizedContent, skill));
-  const matchedDomainSkills = domainSkills.filter(skill => matchesSkill(normalizedContent, skill));
-  const foundKeywords = extractDynamicKeywords(normalizedContent, matchedSkills, 15);
+function analyzeMockResume(content: string, jobDescription = '') {
+  const normalizedContent = normalizeAtsText(content || '');
+  const normalizedJobDescription = normalizeAtsText(jobDescription || '');
+  const primaryDomain = detectDomain(`${normalizedJobDescription}\n${normalizedContent}`.toLowerCase());
+  const domainSkills = DOMAINS[primaryDomain as keyof typeof DOMAINS].skills || [];
+  const sectionMap = getAtsSectionsMap(normalizedContent);
+  const estimatedYears = estimateResumeYearsForAts(normalizedContent);
+  const requiredYears = extractRequiredYearsForAts(normalizedJobDescription);
+  const seniority = determineAtsSeniority({
+    resumeText: normalizedContent,
+    jobDescription: normalizedJobDescription,
+    estimatedYears,
+    requiredYears
+  });
+  const activeWeights = getActiveAtsWeights(seniority);
 
-  const totalKeywordHits = matchedSkills.reduce((sum, skill) => sum + countSkillMatches(normalizedContent, skill), 0);
-  const domainCoverage = domainSkills.length > 0 ? matchedDomainSkills.length / domainSkills.length : 0;
-  const overallCoverage = uniqueSkills.length > 0 ? matchedSkills.length / uniqueSkills.length : 0;
-  const keywordDensity = matchedSkills.length > 0 ? totalKeywordHits / matchedSkills.length : 0;
-  const keywordScore = Math.round(
-    Math.min(35, domainCoverage * 28) +
-    Math.min(10, overallCoverage * 40) +
-    Math.min(7, keywordDensity * 2)
+  const parseWordCount = normalizedContent.split(/\s+/).filter(Boolean).length;
+  const parseLines = normalizedContent.split('\n').map(line => line.trim()).filter(Boolean);
+  const weirdChars = (normalizedContent.match(/[|¦•■□◆►]/g) || []).length;
+  const parseWarnings: string[] = [];
+  let parseScore = 0;
+
+  if (parseWordCount >= 180) parseScore += 3;
+  if (parseLines.length >= 8) parseScore += 1;
+  if (/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-z]{2,}/.test(normalizedContent)) parseScore += 2;
+  if (/(\+\d{1,3}\s?)?(\(?\d{3,4}\)?[\s-]?\d{3}[\s-]?\d{3,4})/.test(normalizedContent)) parseScore += 1;
+  if (weirdChars <= 10) parseScore += 1;
+  parseScore = clampScore(Math.round((parseScore / 8) * activeWeights.formatting_parsability), 0, activeWeights.formatting_parsability);
+
+  if (parseWordCount < 120) parseWarnings.push('Resume text looks thin after parsing. ATS systems often miss content from image-heavy or table-based files.');
+  if (weirdChars > 10) parseWarnings.push('Resume may include columns, tables, or graphics that reduce ATS parsing accuracy.');
+
+  const sectionChecks = [
+    ['Contact', /([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-z]{2,}|linkedin|github|portfolio|phone|mobile)/i],
+    ['Summary', /(summary|profile|objective|about me|professional summary)/i],
+    ['Experience', /(experience|employment|work history|professional experience|internship)/i],
+    ['Skills', /(skills|technical skills|core competencies|technologies|tools|expertise)/i],
+    ['Education', /(education|degree|university|college|bachelor|master|b\.tech|m\.tech|graduate)/i]
+  ] as Array<[string, RegExp]>;
+
+  const foundSections = sectionChecks.filter(([, regex]) => regex.test(normalizedContent)).map(([label]) => label);
+  const missingSections = sectionChecks.filter(([, regex]) => !regex.test(normalizedContent)).map(([label]) => label);
+
+  const targetKeywords = getJobKeywordsForAts(normalizedJobDescription, domainSkills);
+  const hardKeywords = [...new Set(targetKeywords.filter(keyword => domainSkills.includes(keyword) || /[A-Z0-9./+#-]/.test(keyword) || keyword.length <= 5))];
+  const softKeywords = [...new Set([
+    ...ATS_SOFT_SKILLS.filter(skill => matchesSkill(normalizedJobDescription, skill)),
+    ...targetKeywords.filter(keyword => !hardKeywords.includes(keyword) && /^[a-z][a-z\s-]+$/i.test(keyword))
+  ])].slice(0, 10);
+  const titleKeywords = [...new Set(getTargetTitlesForAts(normalizedJobDescription || normalizedContent, primaryDomain)
+    .flatMap(title => title.split(/\s+/))
+    .filter(token => token.length > 2))];
+  const scoreKeywordGroup = (keywords: string[], weightShare: number) => {
+    if (keywords.length === 0) return weightShare;
+    const hits = keywords.reduce((sum, keyword) => sum + (matchesSkill(normalizedContent, keyword) ? 1 : 0), 0);
+    const diversityBonus = keywords.reduce((sum, keyword) => {
+      const sectionsMatched = Object.values(sectionMap).filter(text => matchesSkill(text, keyword)).length;
+      return sum + Math.min(0.35, sectionsMatched * 0.12);
+    }, 0);
+    const raw = (hits / keywords.length) + Math.min(0.25, diversityBonus / Math.max(1, keywords.length));
+    return Math.min(weightShare, Math.round(raw * weightShare));
+  };
+  const keywordScore =
+    scoreKeywordGroup(hardKeywords, Math.round(activeWeights.keyword_match * 0.6)) +
+    scoreKeywordGroup(softKeywords, Math.round(activeWeights.keyword_match * 0.2)) +
+    scoreKeywordGroup(titleKeywords, activeWeights.keyword_match - Math.round(activeWeights.keyword_match * 0.6) - Math.round(activeWeights.keyword_match * 0.2));
+  const matchedKeywords = targetKeywords.filter(keyword => matchesSkill(normalizedContent, keyword));
+  const missingKeywords = targetKeywords.filter(keyword => !matchesSkill(normalizedContent, keyword));
+
+  const targetSkills = [...new Set([
+    ...domainSkills.filter(skill => matchesSkill(normalizedJobDescription, skill)),
+    ...targetKeywords.filter(keyword => domainSkills.some(skill => matchesSkill(keyword, skill)))
+  ])];
+  const expectedSkills = (targetSkills.length > 0 ? targetSkills : domainSkills).slice(0, 16);
+  const matchedSkills = expectedSkills.filter(skill => matchesSkill(normalizedContent, skill));
+  const skillsSectionHits = matchedSkills.filter(skill => matchesSkill(sectionMap.skills || '', skill)).length;
+  const skillsScore = clampScore(
+    Math.round(((matchedSkills.length / Math.max(1, expectedSkills.length)) * activeWeights.skills_match * 0.8) + ((skillsSectionHits / Math.max(1, expectedSkills.length)) * activeWeights.skills_match * 0.2)),
+    0,
+    activeWeights.skills_match
   );
 
-  const sections = {
-    contact: /([a-zA-Z0-9._%+-]+@|phone|mobile|linkedin|github|portfolio)/,
-    education: /(education|degree|university|college|bachelor|master|b\.tech|m\.tech|graduate)/,
-    experience: /(experience|worked|employment|internship|professional)/,
-    skills: /(skills|technologies|tools|competencies|expertise)/
-  };
+  const educationText = `${sectionMap.education || ''}\n${normalizedContent}`;
+  const certText = `${sectionMap.certifications || ''}\n${normalizedContent}`;
+  const hasDegree = /(bachelor|master|mba|b\.tech|m\.tech|bsc|msc|phd|doctorate|associate)/i.test(educationText);
+  const hasInstitution = /(university|college|institute|school)/i.test(educationText);
+  const hasYear = /\b(19|20)\d{2}\b/.test(educationText);
+  const hasField = /(computer science|engineering|business|marketing|design|finance|data science|information technology)/i.test(educationText);
+  const hasCertifications = /(certified|certification|aws certified|google|azure|pmp|scrum|cfa|security\+|network\+)/i.test(certText);
+  const educationScore = clampScore(
+    (hasDegree ? 3 : 0) + (hasInstitution ? 2 : 0) + (hasYear ? 1 : 0) + (hasField ? 2 : 0) + (hasCertifications ? (seniority === 'fresher' ? 1 : 2) : 0),
+    0,
+    activeWeights.education_certifications
+  );
 
-  let sectionScore = 0;
-  const missingSections: string[] = [];
-  Object.entries(sections).forEach(([name, regex]) => {
-    if (regex.test(normalizedContent.toLowerCase())) {
-      sectionScore += name === 'experience' ? 10 : 5;
-    } else {
-      missingSections.push(name);
-    }
+  const targetTitles = getTargetTitlesForAts(normalizedJobDescription || normalizedContent, primaryDomain);
+  const matchedTitles = targetTitles.filter(title => matchesSkill(normalizedContent, title));
+  const partialTitleMatches = targetTitles.filter(title => {
+    const titleTokens = tokenizeForAts(title);
+    const resumeTokens = new Set(tokenizeForAts(normalizedContent));
+    const overlap = titleTokens.filter(token => resumeTokens.has(token)).length;
+    return titleTokens.length > 0 && overlap / titleTokens.length >= 0.5;
   });
+  const titleScore = matchedTitles.length > 0 ? activeWeights.title_alignment : partialTitleMatches.length > 0 ? Math.round(activeWeights.title_alignment * 0.6) : 0;
 
-  const metricMatch = normalizedContent.toLowerCase().match(/\d+%/g) || [];
-  const actionVerbs = ['developed', 'led', 'managed', 'implemented', 'designed', 'optimized',
-    'scaled', 'architected', 'resolved', 'collaborated', 'increased', 'decreased', 'shipped',
-    'built', 'deployed', 'automated', 'analyzed', 'delivered', 'launched', 'created'];
-  const verbMatch = actionVerbs.filter(verb => matchesSkill(normalizedContent.toLowerCase(), verb));
-  const impactScore = Math.min(15, (metricMatch.length * 4) + (verbMatch.length * 1.5));
+  const experienceText = `${sectionMap.experience || ''}\n${sectionMap.projects || ''}\n${normalizedContent}`;
+  const numericBullets = experienceText.match(/\b\d+([.,]\d+)?\s?(%|x|k|m|b|hours|days|weeks|months|years|users|clients|projects|revenue|sales)?\b/gi) || [];
+  const actionVerbCount = ATS_ACTION_VERBS.filter(verb => matchesSkill(experienceText.toLowerCase(), verb)).length;
+  const yearTokens = [...normalizedContent.matchAll(/\b(19|20)\d{2}\b/g)].map(match => Number(match[0]));
+  const largeGapDetected = yearTokens.length >= 2 && yearTokens.some((year, index) => index > 0 && Math.abs(year - yearTokens[index - 1]) > 3);
+  let experienceScoreBase = requiredYears ? 0 : estimatedYears !== null ? 6 : 3;
+  if (requiredYears && estimatedYears !== null) {
+    const softenedRatio = seniority === 'fresher' && requiredYears <= 2 ? Math.max(estimatedYears / requiredYears, 0.75) : estimatedYears / requiredYears;
+    experienceScoreBase = Math.round(Math.min(1.2, softenedRatio) * 8);
+  } else if (requiredYears && estimatedYears === null) {
+    experienceScoreBase = seniority === 'fresher' ? 4 : 2;
+  }
 
-  const wordCount = normalizedContent.split(/\s+/).filter(Boolean).length;
-  const depthScore = wordCount > 180 && wordCount < 850 ? 10 : wordCount >= 850 ? 7 : 4;
-  const score = Math.max(18, Math.min(98, Math.round(keywordScore + sectionScore + impactScore + depthScore + 12)));
+  const semanticMatches = splitAtsSentences(normalizedJobDescription).filter(jobSentence => {
+    const jobTokens = tokenizeForAts(jobSentence);
+    if (jobTokens.length < 4) return false;
+    return splitAtsSentences(experienceText).some(candidate => {
+      const candidateTokens = new Set(tokenizeForAts(candidate));
+      return jobTokens.filter(token => candidateTokens.has(token)).length >= 2;
+    });
+  }).length;
+  const experienceScore = clampScore(
+    experienceScoreBase +
+      Math.min(6, Math.round((numericBullets.length / (seniority === 'senior' ? 4 : 3)) * 3 + (actionVerbCount / 4))) +
+      Math.min(5, semanticMatches) +
+      (largeGapDetected ? 1 : 3) +
+      (/(experience|employment|work history|internship)/i.test(sectionMap.experience || '') ? 3 : 1),
+    0,
+    activeWeights.work_experience_relevance
+  );
+
+  const score = clampScore(
+    parseScore + keywordScore + skillsScore + educationScore + titleScore + experienceScore,
+    0,
+    100
+  );
 
   const suggestions: string[] = [];
-  const missingFromDomain = domainSkills.filter(skill => !matchesSkill(normalizedContent, skill)).slice(0, 3);
-
-  if (missingFromDomain.length > 0) {
-    suggestions.push(`${primaryDomain.replace('_', ' ').toUpperCase()} Gap: Consider adding ${missingFromDomain.join(', ')} to strengthen your profile.`);
-  }
-  if (missingSections.length > 0) {
-    suggestions.push(`Missing Sections: Add or clearly label - ${missingSections.join(', ')}.`);
-  }
-  if (metricMatch.length === 0) {
-    suggestions.push('Quantify Impact: Add numbers like "Reduced load time by 40%" to stand out in ATS.');
-  }
-  if (matchedDomainSkills.length < 5) {
-    suggestions.push(`Low Keyword Match: Only ${matchedDomainSkills.length} core ${primaryDomain.replace('_', ' ')} skills found. Add more domain-specific tools.`);
-  }
-  if (verbMatch.length < 3) {
-    suggestions.push('Weak Action Verbs: Start bullets with Built, Deployed, Optimized, Delivered, Automated.');
-  }
+  if (parseWarnings.length > 0) suggestions.push(parseWarnings[0]);
+  if (missingKeywords.length > 0) suggestions.push(`Keyword match is the biggest ATS lever. Add missing ${primaryDomain.replace('_', ' ')} terms like ${missingKeywords.slice(0, 4).join(', ')} where they truthfully apply.`);
+  if (missingSections.length > 0) suggestions.push(`Add or relabel missing sections: ${missingSections.slice(0, 4).join(', ')}.`);
+  if (expectedSkills.filter(skill => !matchesSkill(normalizedContent, skill)).length > 0) suggestions.push(`Strengthen the dedicated skills section with exact job terms like ${expectedSkills.filter(skill => !matchesSkill(normalizedContent, skill)).slice(0, 4).join(', ')}.`);
+  if (numericBullets.length < 3) suggestions.push('Add quantified achievements with numbers, percentages, time saved, revenue, users, tickets, or conversion improvements.');
+  if (targetTitles.length > 0 && matchedTitles.length === 0) suggestions.push(`Align your headline or recent role title more closely with the target role, such as ${targetTitles[0]}.`);
+  if (!hasDegree || !hasInstitution || !hasYear) suggestions.push('Make education easier for ATS to read by including degree, field, institution, and graduation year on separate clear lines.');
+  if (largeGapDetected) suggestions.push('Employment dates may show a large gap. Clarify the timeline with projects, internships, freelance work, or education periods.');
+  if (!normalizedJobDescription) suggestions.push('Paste a target job description to switch from domain-based ATS scoring to role-specific ATS scoring with exact keyword, title, and experience checks.');
 
   return {
     score,
-    suggestions: suggestions.slice(0, 5),
-    keywords_found: foundKeywords.slice(0, 15)
+    domain: primaryDomain,
+    seniority,
+    suggestions: dedupeAts(suggestions).slice(0, 6),
+    keywords_found: matchedKeywords.slice(0, 18),
+    missing_keywords: missingKeywords.slice(0, 12),
+    breakdown: {
+      formatting_parsability: parseScore,
+      keyword_match: keywordScore,
+      work_experience_relevance: experienceScore,
+      skills_match: skillsScore,
+      education_certifications: educationScore,
+      title_alignment: titleScore,
+    },
+    diagnostics: {
+      sections_found: foundSections,
+      sections_missing: missingSections,
+      target_titles: targetTitles,
+      matched_titles: matchedTitles,
+      required_years: requiredYears,
+      estimated_years: estimatedYears,
+      parse_warnings: parseWarnings,
+      seniority_profile: seniority
+    }
   };
 }
 
@@ -631,10 +969,11 @@ const mockApiPlugin = () => ({
           // ATS Analysis Mock (FIXED: NOW USES GLOBAL SKILL EXTRACTION)
           if (path === '/api/ats-analyze' && req.method === 'POST') {
             const resumeId = payload.resume_id;
+            const jobDescription = typeof payload.job_description === 'string' ? payload.job_description : '';
             const resume = mockDb.resumes.find((r: any) => String(r.id) === String(resumeId)) || mockDb.resumes[0];
             const content = resume?.content || '';
 
-            return res.end(JSON.stringify(analyzeMockResume(content)));
+            return res.end(JSON.stringify(analyzeMockResume(content, jobDescription)));
           }
 
           if (path === '/api/fetch-real-jobs' && req.method === 'POST') {
