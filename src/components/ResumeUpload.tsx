@@ -68,11 +68,11 @@ export default function ResumeUpload({ onResumeUploaded }: Props) {
       } else {
         const errorText = await res.text();
         console.error('Upload failed:', errorText);
-        setError('Upload failed. Please try again.');
+        setError(errorText || 'Upload failed. Please try again.');
       }
     } catch (err) {
       console.error('Upload error:', err);
-      setError('An error occurred during upload. Please try again.');
+      setError(err instanceof Error ? err.message : 'An error occurred during upload. Please try again.');
     } finally {
       setUploading(false);
     }

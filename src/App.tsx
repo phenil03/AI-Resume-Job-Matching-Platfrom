@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Upload, FileText, Target, Zap, CheckCircle, XCircle, Clock, TrendingUp, Briefcase, Globe, Loader2, LogOut, User as UserIcon, Lock, Bell, X } from 'lucide-react';
+import { googleLogout } from '@react-oauth/google';
 
 // Components
 import ResumeUpload from './components/ResumeUpload';
@@ -162,6 +163,7 @@ function App() {
         console.error('Sign-out failed:', error);
       });
     }
+    googleLogout();
     setUser(null);
     localStorage.removeItem('user');
     setCurrentStep('upload');
@@ -327,13 +329,21 @@ function App() {
                 <ATSAnalysis resume={selectedResume} onComplete={handleATSComplete} />
               )}
               {currentStep === 'matches' && selectedResume && (
-                <JobMatches resumeId={selectedResume.id} onComplete={handleMatchesComplete} />
+                <JobMatches
+                  resumeId={selectedResume.id}
+                  atsScore={atsScore}
+                  onComplete={handleMatchesComplete}
+                />
               )}
               
               {/* Login Protected Steps */}
               {currentStep === 'apply' && selectedResume && (
                 user ? (
-                  <AutoApply resumeId={selectedResume.id} onComplete={handleApplyComplete} />
+                  <AutoApply
+                    resumeId={selectedResume.id}
+                    atsScore={atsScore}
+                    onComplete={handleApplyComplete}
+                  />
                 ) : (
                   <div className="flex flex-col items-center justify-center py-20 bg-slate-900/50 border border-white/10 rounded-3xl p-12 text-center">
                     <Lock className="w-16 h-16 text-blue-500 mb-6 mx-auto opacity-50" />

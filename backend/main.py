@@ -2,7 +2,12 @@ from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 from routers import resume, jobs, apply
-import subprocess, sys
+from app.jobs.router import router as job_fetcher_router
+import subprocess, sys, os
+from dotenv import load_dotenv
+
+# Load .env from parent directory
+load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))
 
 # Ensure spaCy model is downloaded
 subprocess.run([sys.executable, "-m", "spacy", "download", "en_core_web_sm"], check=False)
@@ -38,6 +43,7 @@ async def root():
 app.include_router(resume.router)
 app.include_router(jobs.router)
 app.include_router(apply.router)
+app.include_router(job_fetcher_router)
 
 @app.get("/health", tags=["System"])
 async def health_check():

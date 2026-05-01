@@ -25,6 +25,16 @@ class JobMatch(BaseModel):
     job_url: str
     description: str
 
+class AggregatedJob(BaseModel):
+    title: str
+    company: str
+    location: str
+    job_type: str
+    description: str
+    apply_url: str
+    date_posted: Optional[str] = None
+    source: str
+
 class ApplicationResult(BaseModel):
     job_title: str
     company: str

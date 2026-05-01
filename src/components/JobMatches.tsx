@@ -18,15 +18,20 @@ interface JobMatch {
 
 interface Props {
   resumeId: number;
+  atsScore: number | null;
   onComplete: () => void;
 }
 
 const API_BASE = import.meta.env.VITE_BACKEND_URL || '';
 
-export default function JobMatches({ resumeId, onComplete }: Props) {
+export default function JobMatches({ resumeId, atsScore, onComplete }: Props) {
   const [loading, setLoading] = useState(true);
   const [matches, setMatches] = useState<JobMatch[]>([]);
   const [fetchStatus, setFetchStatus] = useState('');
+  const canApplyByAts = (atsScore ?? 0) >= 50;
+  const isSearchLink = (job: JobMatch) => job.portal.endsWith('_search');
+  const liveMatchCount = matches.filter(job => !isSearchLink(job)).length;
+  const searchLinkCount = matches.filter(isSearchLink).length;
 
   const fetchMatches = useEffectEvent(async () => {
     setLoading(true);
@@ -48,8 +53,13 @@ export default function JobMatches({ resumeId, onComplete }: Props) {
 
       const fetchData = await fetchRes.json();
       console.log('fetch-real-jobs response:', fetchData);
-      const jobCount = fetchData.count || fetchData.jobs?.length || 0;
-      setFetchStatus(`Found ${jobCount} real jobs!`);
+      const liveCount = fetchData.live_job_count ?? fetchData.jobs?.filter((job: JobMatch) => !job.portal.endsWith('_search')).length ?? 0;
+      const searchCount = fetchData.search_link_count ?? fetchData.jobs?.filter((job: JobMatch) => job.portal.endsWith('_search')).length ?? 0;
+      setFetchStatus(
+        liveCount > 0
+          ? `Found ${liveCount} live jobs${searchCount > 0 ? ` and ${searchCount} search links` : ''}!`
+          : `No live jobs found yet. Showing ${searchCount} search links.`
+      );
 
       if (Array.isArray(fetchData.jobs) && fetchData.jobs.length > 0) {
         setMatches(fetchData.jobs);
@@ -93,7 +103,12 @@ export default function JobMatches({ resumeId, onComplete }: Props) {
       case 'remotive':
         return 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30';
       case 'naukri':
+      case 'naukri_search':
         return 'bg-blue-600/20 text-blue-400 border-blue-600/30';
+      case 'linkedin_search':
+        return 'bg-sky-600/20 text-sky-300 border-sky-500/30';
+      case 'indeed_search':
+        return 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30';
       case 'company_website':
         return 'bg-orange-500/20 text-orange-400 border-orange-500/30';
       default:
@@ -116,6 +131,12 @@ export default function JobMatches({ resumeId, onComplete }: Props) {
         return 'Remotive';
       case 'naukri':
         return 'Naukri.com';
+      case 'naukri_search':
+        return 'Naukri Search';
+      case 'linkedin_search':
+        return 'LinkedIn Search';
+      case 'indeed_search':
+        return 'Indeed Search';
       case 'company_website':
         return 'Company Website';
       default:
@@ -151,7 +172,7 @@ export default function JobMatches({ resumeId, onComplete }: Props) {
             <span className="px-3 py-1 bg-green-500/20 text-green-400 border border-green-500/30 rounded-full text-[10px] font-bold uppercase tracking-wider">Region: India</span>
             <span className="px-3 py-1 bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded-full text-[10px] font-bold uppercase tracking-wider">Sources: Internet APIs</span>
           </div>
-          <p className="text-white/70">Live India-first job listings from Adzuna India, Remotive, RemoteOK, and more</p>
+          <p className="text-white/70">Strictly ranked India-first jobs plus direct LinkedIn, Indeed, and Naukri search links</p>
           {fetchStatus && (
             <p className="text-sm text-green-400 mt-2">{fetchStatus}</p>
           )}
@@ -161,7 +182,7 @@ export default function JobMatches({ resumeId, onComplete }: Props) {
           <div className="text-center py-16">
             <Loader2 className="w-12 h-12 mx-auto mb-4 animate-spin text-blue-400" />
             <p className="text-white/70">Searching real job portals...</p>
-            <p className="text-sm text-white/50 mt-2">Fetching from Adzuna India, Remotive, RemoteOK...</p>
+            <p className="text-sm text-white/50 mt-2">Fetching from live APIs and preparing search links for LinkedIn, Indeed, and Naukri...</p>
           </div>
         ) : matches.length === 0 ? (
           <div className="text-center py-16">
@@ -172,7 +193,9 @@ export default function JobMatches({ resumeId, onComplete }: Props) {
           <div className="space-y-6">
             <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4 mb-6">
               <p className="text-green-300 text-sm text-center">
-                Found {matches.length} real job openings from live job portals
+                {liveMatchCount > 0
+                  ? `Found ${liveMatchCount} live portal results${searchLinkCount > 0 ? ` plus ${searchLinkCount} search links` : ''}`
+                  : `Showing ${searchLinkCount} direct search links because no live portal results matched yet`}
               </p>
             </div>
 
@@ -273,14 +296,20 @@ export default function JobMatches({ resumeId, onComplete }: Props) {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 }}
-              onClick={onComplete}
-              className="w-full py-4 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl font-semibold text-lg flex items-center justify-center gap-2 hover:from-blue-600 hover:to-purple-700 transition-all"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+              onClick={canApplyByAts ? onComplete : undefined}
+              disabled={!canApplyByAts}
+              className="w-full py-4 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl font-semibold text-lg flex items-center justify-center gap-2 hover:from-blue-600 hover:to-purple-700 transition-all disabled:cursor-not-allowed disabled:opacity-50"
+              whileHover={canApplyByAts ? { scale: 1.02 } : {}}
+              whileTap={canApplyByAts ? { scale: 0.98 } : {}}
             >
-              Auto-Apply to Selected Jobs
+              {canApplyByAts ? 'Auto-Apply to Selected Jobs' : 'ATS Score 50+ Required to Apply'}
               <ArrowRight className="w-5 h-5" />
             </motion.button>
+            {!canApplyByAts && (
+              <p className="text-center text-sm text-amber-300/90">
+                Your ATS score is {atsScore ?? 0}. Reach at least 50 in ATS Analysis to unlock job applications.
+              </p>
+            )}
           </div>
         )}
       </motion.div>

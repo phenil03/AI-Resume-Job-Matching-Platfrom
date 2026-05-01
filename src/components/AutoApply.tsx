@@ -19,29 +19,36 @@ interface ApplyResult {
 
 interface Props {
   resumeId: number;
+  atsScore: number | null;
   onComplete: () => void;
 }
 
 const API_BASE = import.meta.env.VITE_BACKEND_URL || '';
 
-export default function AutoApply({ resumeId, onComplete }: Props) {
+export default function AutoApply({ resumeId, atsScore, onComplete }: Props) {
   const [jobs, setJobs] = useState<JobMatch[]>([]);
   const [selectedJobs, setSelectedJobs] = useState<number[]>([]);
   const [applying, setApplying] = useState(false);
   const [results, setResults] = useState<ApplyResult[]>([]);
   const [applyError, setApplyError] = useState<string>('');
+  const canApplyByAts = (atsScore ?? 0) >= 50;
 
   useEffect(() => {
-    fetchJobs();
-  }, []);
+    if (canApplyByAts) {
+      fetchJobs();
+    } else {
+      setJobs([]);
+      setSelectedJobs([]);
+    }
+  }, [canApplyByAts, resumeId]);
 
   const fetchJobs = async () => {
     try {
       const res = await fetch(`${API_BASE}/api/job-matches?resume_id=${resumeId}`);
       if (res.ok) {
         const data = await res.json();
-        setJobs(data.filter((j: JobMatch) => j.match_score >= 60)); // Only show jobs with 60%+ match
-        setSelectedJobs(data.filter((j: JobMatch) => j.match_score >= 80).map((j: JobMatch) => j.id)); // Auto-select 80%+ matches
+        setJobs(Array.isArray(data) ? data : []);
+        setSelectedJobs(Array.isArray(data) ? data.map((j: JobMatch) => j.id) : []);
       }
     } catch (err) {
       console.error('Fetch error:', err);
@@ -73,6 +80,11 @@ export default function AutoApply({ resumeId, onComplete }: Props) {
   };
 
   const handleAutoApply = async () => {
+    if (!canApplyByAts) {
+      setApplyError(`Your ATS score is ${atsScore ?? 0}. You need at least 50 to apply to job portals.`);
+      return;
+    }
+
     if (selectedJobs.length === 0 || applying) return;
     
     setApplying(true);
@@ -117,7 +129,14 @@ export default function AutoApply({ resumeId, onComplete }: Props) {
           <p className="text-white/70">Select jobs to automatically apply with your resume</p>
         </div>
 
-        {!applying && results.length === 0 ? (
+        {!canApplyByAts ? (
+          <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-5 text-center">
+            <p className="text-lg font-semibold text-amber-200">ATS score 50+ is required to apply</p>
+            <p className="mt-2 text-sm text-amber-100/80">
+              Your current ATS score is {atsScore ?? 0}. Improve the resume in ATS Analysis, then come back to unlock job portal applications.
+            </p>
+          </div>
+        ) : !applying && results.length === 0 ? (
           <div className="space-y-6">
             {applyError && (
               <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 text-sm text-red-300">
@@ -134,6 +153,7 @@ export default function AutoApply({ resumeId, onComplete }: Props) {
                   <li>Automatically fills application forms with your resume data</li>
                   <li>Handles multiple portals simultaneously</li>
                   <li>LinkedIn applications may require manual verification</li>
+                  <li>Search portal jobs are also included when your ATS score is 50 or higher</li>
                 </ul>
               </div>
             </div>

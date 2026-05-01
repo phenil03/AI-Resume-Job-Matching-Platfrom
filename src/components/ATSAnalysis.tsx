@@ -7,8 +7,7 @@ import {
   CheckCircle,
   Loader2,
   RefreshCw,
-  Target,
-  TrendingUp
+  Target
 } from 'lucide-react';
 
 interface Resume {
@@ -43,6 +42,15 @@ interface Props {
 }
 
 const API_BASE = import.meta.env.VITE_BACKEND_URL || '';
+
+const formatDomainLabel = (domain?: string) =>
+  (domain || 'general')
+    .split('_')
+    .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
+
+const getDomainQueryValue = (domain?: string) =>
+  (domain || 'general').replace(/_/g, ' ');
 
 export default function ATSAnalysis({ resume, onComplete }: Props) {
   const [analyzing, setAnalyzing] = useState(true);
@@ -113,6 +121,13 @@ export default function ATSAnalysis({ resume, onComplete }: Props) {
       .map(part => part.charAt(0).toUpperCase() + part.slice(1))
       .join(' ');
 
+  const handleDetectedDomainClick = () => {
+    if (!result?.domain) return;
+    const domainQuery = getDomainQueryValue(result.domain);
+    setJobDescription(domainQuery);
+    analyzeResume(domainQuery);
+  };
+
   return (
     <div className="max-w-5xl mx-auto">
       <motion.div
@@ -140,6 +155,17 @@ export default function ATSAnalysis({ resume, onComplete }: Props) {
           <p className="text-sm text-white/60 mb-3">
             Paste a job description for the most accurate ATS score. Without it, the analyzer uses your resume&apos;s detected domain and role signals.
           </p>
+          {result?.domain && (
+            <button
+              type="button"
+              onClick={handleDetectedDomainClick}
+              disabled={analyzing}
+              className="mb-3 inline-flex items-center gap-2 rounded-full border border-cyan-400/40 bg-cyan-400/10 px-4 py-2 text-sm font-semibold text-cyan-200 transition hover:border-cyan-300/70 hover:bg-cyan-400/15 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <Target className="h-4 w-4" />
+              Use detected domain: {formatDomainLabel(result.domain)}
+            </button>
+          )}
           <textarea
             value={jobDescription}
             onChange={(e) => setJobDescription(e.target.value)}
@@ -192,9 +218,14 @@ export default function ATSAnalysis({ resume, onComplete }: Props) {
                 <h3 className="text-2xl font-bold mb-2">{getScoreLabel(result.score)}</h3>
                 <p className="text-white/70">Your resume is {result.score}% optimized for ATS systems</p>
                 {result.domain && (
-                  <p className="mt-2 text-sm text-blue-300/90">
-                    Detected domain: {result.domain.replace(/_/g, ' ')}
-                  </p>
+                  <button
+                    type="button"
+                    onClick={handleDetectedDomainClick}
+                    disabled={analyzing}
+                    className="mt-2 text-sm text-blue-300/90 underline decoration-blue-400/40 underline-offset-4 transition hover:text-cyan-300 disabled:cursor-not-allowed disabled:no-underline disabled:opacity-60"
+                  >
+                    Detected domain: {formatDomainLabel(result.domain)}
+                  </button>
                 )}
                 {result.seniority && (
                   <p className="mt-1 text-sm text-cyan-300/90">
@@ -252,30 +283,6 @@ export default function ATSAnalysis({ resume, onComplete }: Props) {
                 ))}
               </div>
             </motion.div>
-
-            {!!result.missing_keywords?.length && (
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.3 }}
-                className="bg-white/5 border border-white/10 rounded-xl p-6"
-              >
-                <div className="flex items-center gap-3 mb-4">
-                  <TrendingUp className="w-6 h-6 text-amber-400" />
-                  <h3 className="text-xl font-semibold">Missing ATS Keywords</h3>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {result.missing_keywords.map((keyword, i) => (
-                    <span
-                      key={`${keyword}-${i}`}
-                      className="px-3 py-1.5 bg-amber-500/15 border border-amber-500/30 rounded-lg text-sm text-amber-200"
-                    >
-                      {keyword}
-                    </span>
-                  ))}
-                </div>
-              </motion.div>
-            )}
 
             <motion.div
               initial={{ opacity: 0, x: 20 }}

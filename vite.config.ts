@@ -139,6 +139,32 @@ const INDIA_PRIORITY_CITIES = [
   'Noida'
 ];
 
+const DOMAIN_ANCHORS: Record<string, string[]> = {
+  frontend: ['frontend', 'react', 'ui', 'web', 'javascript', 'typescript'],
+  backend: ['backend', 'api', 'server', 'python', 'node', 'java'],
+  fullstack: ['full stack', 'fullstack', 'software engineer', 'application developer'],
+  devops: ['devops', 'platform', 'site reliability', 'sre', 'cloud'],
+  data_science: ['data scientist', 'machine learning', 'ml', 'ai engineer', 'artificial intelligence', 'nlp'],
+  data_analyst: ['data analyst', 'analytics', 'bi', 'business intelligence', 'reporting', 'tableau', 'power bi'],
+  design: ['designer', 'ui', 'ux', 'product design', 'figma'],
+  database: ['database', 'data engineer', 'sql', 'dba'],
+  mobile: ['mobile', 'android', 'ios', 'flutter', 'react native'],
+  cybersecurity: ['security', 'cybersecurity', 'infosec', 'soc', 'penetration']
+};
+
+const EXCLUDED_TITLE_PATTERNS = [
+  /\btax\b/i,
+  /\benablement\b/i,
+  /\bparalegal\b/i,
+  /\baccount executive\b/i,
+  /\bsales\b/i,
+  /\bmarketing\b/i,
+  /\bcompensation\b/i,
+  /\blegal\b/i,
+  /\btrader\b/i,
+  /\bnurse\b/i
+];
+
 function detectDomain(lowerContent: string) {
   const scores: Record<string, number> = {};
   for (const [domain, config] of Object.entries(DOMAINS)) {
@@ -667,11 +693,96 @@ function dedupeJobs<T extends { title?: string; company?: string; url?: string }
   });
 }
 
-function buildIndiaQueries(searchSkills: string[]) {
-  const baseTerms = [...new Set(searchSkills.filter(Boolean))];
+function normalizeQuery(value: string) {
+  return String(value || '').replace(/\s+/g, ' ').trim();
+}
+
+function countAnchorHits(text: string, anchors: string[]) {
+  return anchors.reduce((sum, anchor) => sum + (matchesSkill(text, anchor) ? 1 : 0), 0);
+}
+
+function countAnyTermHits(text: string, terms: string[]) {
+  return terms.reduce((sum, term) => sum + countSkillMatches(text, term), 0);
+}
+
+function getProfileQueryTerms(profile: { roleHints?: string[]; matchedDomainSkills?: string[]; domain: string; searchSkills?: string[] }) {
+  const anchors = DOMAIN_ANCHORS[profile.domain] || [];
+  return [...new Set([
+    ...(profile.roleHints || []),
+    ...anchors,
+    ...((profile.matchedDomainSkills || []).slice(0, 6))
+  ].filter(Boolean).map(normalizeQuery))];
+}
+
+function isStrictDomainMatch(job: { title?: string; description?: string; location?: string }, profile: { domain: string; roleHints?: string[]; matchedDomainSkills?: string[] }) {
+  const titleText = `${job.title || ''}`.toLowerCase();
+  const fullText = `${job.title || ''} ${job.description || ''} ${job.location || ''}`.toLowerCase();
+  const anchors = DOMAIN_ANCHORS[profile.domain] || [];
+  const roleHints = profile.roleHints || [];
+  const matchedDomainSkills = profile.matchedDomainSkills || [];
+  const roleTitleMatches = roleHints.filter(role => countSkillMatches(titleText, role) > 0).length;
+  const roleBodyMatches = roleHints.filter(role => countSkillMatches(fullText, role) > 0).length;
+  const anchorHits = countAnchorHits(fullText, anchors);
+  const skillHits = matchedDomainSkills.filter(skill => matchesSkill(fullText, skill)).length;
+  const excludedTitle = EXCLUDED_TITLE_PATTERNS.some(pattern => pattern.test(titleText));
+
+  if (excludedTitle && roleTitleMatches === 0 && anchorHits < 2) return false;
+  if (roleTitleMatches > 0) return true;
+  if (roleBodyMatches > 0 && skillHits >= 2) return true;
+  return anchorHits >= 2 && skillHits >= 2;
+}
+
+function buildPortalSearchLinks(profile: { roleHints?: string[]; searchSkills?: string[] }) {
+  const primaryRole = normalizeQuery(profile.roleHints?.[0] || profile.searchSkills?.[0] || 'Software Engineer');
+  return [
+    {
+      title: `${primaryRole} jobs on LinkedIn`,
+      company: 'LinkedIn',
+      location: 'India',
+      salary: 'Open search',
+      description: `Open LinkedIn search results for ${primaryRole} jobs in India.`,
+      url: `https://www.linkedin.com/jobs/search/?keywords=${encodeURIComponent(primaryRole)}&location=${encodeURIComponent('India')}`,
+      portal: 'linkedin_search',
+      source: 'LinkedIn Search',
+      job_type: 'Search'
+    },
+    {
+      title: `${primaryRole} jobs on Indeed`,
+      company: 'Indeed',
+      location: 'India',
+      salary: 'Open search',
+      description: `Open Indeed search results for ${primaryRole} jobs in India.`,
+      url: `https://in.indeed.com/jobs?q=${encodeURIComponent(primaryRole)}&l=${encodeURIComponent('India')}`,
+      portal: 'indeed_search',
+      source: 'Indeed Search',
+      job_type: 'Search'
+    },
+    {
+      title: `${primaryRole} jobs on Naukri`,
+      company: 'Naukri',
+      location: 'India',
+      salary: 'Open search',
+      description: `Open Naukri search results for ${primaryRole} jobs in India.`,
+      url: `https://www.naukri.com/${encodeURIComponent(primaryRole.toLowerCase().replace(/\s+/g, '-'))}-jobs-in-india`,
+      portal: 'naukri_search',
+      source: 'Naukri Search',
+      job_type: 'Search'
+    }
+  ];
+}
+
+function isPortalSearchLink(job: { portal?: string }) {
+  return typeof job.portal === 'string' && job.portal.endsWith('_search');
+}
+
+function buildIndiaQueries(profile: { searchSkills: string[]; roleHints?: string[]; matchedDomainSkills?: string[]; domain: string }) {
+  const baseTerms = [...new Set([
+    ...(profile.roleHints || []).slice(0, 3),
+    ...(profile.matchedDomainSkills || []).slice(0, 3)
+  ].filter(Boolean))];
   const queries = new Set<string>();
 
-  baseTerms.slice(0, 4).forEach(term => {
+  baseTerms.slice(0, 5).forEach(term => {
     queries.add(term);
     queries.add(`${term} India`);
   });
@@ -681,33 +792,41 @@ function buildIndiaQueries(searchSkills: string[]) {
     queries.add(`${baseTerms[0]} ${baseTerms[1]} India`);
   }
 
-  queries.add('software engineer India');
-  queries.add('developer India');
+  if (profile.domain === 'fullstack' || profile.domain === 'frontend' || profile.domain === 'backend') {
+    queries.add(`${profile.roleHints?.[0] || 'Software Engineer'} India`);
+  }
 
   return [...queries].slice(0, 8);
 }
 
-async function fetchLiveJobs(searchSkills: string[]) {
-  const queryTerms = [...new Set(searchSkills.filter(Boolean))].slice(0, 6);
+async function fetchLiveJobs(profile: { searchSkills: string[]; roleHints?: string[]; matchedDomainSkills?: string[]; domain: string }) {
+  const queryTerms = getProfileQueryTerms(profile).slice(0, 8);
+  const scoringSkills = (profile.matchedDomainSkills && profile.matchedDomainSkills.length > 0)
+    ? profile.matchedDomainSkills.slice(0, 8)
+    : profile.searchSkills.slice(0, 6);
   const roleQueries = [
+    profile.roleHints?.[0],
+    profile.roleHints?.[1],
     queryTerms.slice(0, 2).join(' '),
-    queryTerms.slice(0, 3).join(' '),
-    queryTerms[0],
-    'software engineer'
-  ].filter(Boolean);
-  const indiaQueries = buildIndiaQueries(searchSkills);
+    queryTerms[0]
+  ].filter((value): value is string => Boolean(value));
+  const indiaQueries = buildIndiaQueries(profile);
 
   const adzunaPages = [1, 2];
-  const adzunaCalls = INDIA_PRIORITY_CITIES.flatMap(city =>
-    adzunaPages.flatMap(page =>
-      indiaQueries.slice(0, 4).map(query =>
-        axios.get(
-          `https://api.adzuna.com/v1/api/jobs/in/search/${page}?app_id=8e8f4f4e&app_key=demo-key&results_per_page=20&what=${encodeURIComponent(query)}&where=${encodeURIComponent(city)}&content-type=application/json`,
-          { timeout: 9000 }
+  const adzunaAppId = process.env.ADZUNA_APP_ID;
+  const adzunaApiKey = process.env.ADZUNA_API_KEY;
+  const adzunaCalls = adzunaAppId && adzunaApiKey
+    ? INDIA_PRIORITY_CITIES.flatMap(city =>
+      adzunaPages.flatMap(page =>
+        indiaQueries.slice(0, 4).map(query =>
+          axios.get(
+            `https://api.adzuna.com/v1/api/jobs/in/search/${page}?app_id=${adzunaAppId}&app_key=${adzunaApiKey}&results_per_page=20&what=${encodeURIComponent(query)}&where=${encodeURIComponent(city)}&content-type=application/json`,
+            { timeout: 9000 }
+          )
         )
       )
     )
-  );
+    : [];
 
   const remotiveCalls = roleQueries.slice(0, 3).map(query =>
     axios.get(`https://remotive.com/api/remote-jobs?search=${encodeURIComponent(query)}`, {
@@ -797,34 +916,73 @@ async function fetchLiveJobs(searchSkills: string[]) {
   const ranked = dedupeJobs([...adzunaJobs, ...remoteOkJobs, ...arbeitnowJobs, ...remotiveJobs])
     .filter(job => job.title && job.company && job.url)
     .filter(job => isIndiaLocation((job as any).location || '') || isIndiaFriendlyRemoteJob((job as any).location || '') || ((job as any).job_type || '').toLowerCase() === 'remote')
+    .filter(job => isStrictDomainMatch(job, profile))
     .map(job => ({
       ...job,
       relevance: rankJobRelevance(job, queryTerms)
     }))
     .sort((a, b) => b.relevance - a.relevance);
 
-  const relevant = ranked.filter(job => job.relevance >= 0);
-  if (relevant.length > 0) {
-    return relevant
-      .sort((a: any, b: any) => {
-        const aIndia = isIndiaLocation(a.location || '') ? 1 : 0;
-        const bIndia = isIndiaLocation(b.location || '') ? 1 : 0;
-        return bIndia - aIndia || b.relevance - a.relevance;
-      })
-      .slice(0, 120);
-  }
+  const relevant = ranked.filter(job => job.relevance >= 4);
+  const broadFallback = dedupeJobs([...adzunaJobs, ...remoteOkJobs, ...arbeitnowJobs, ...remotiveJobs])
+    .filter(job => job.title && job.company && job.url)
+    .filter(job => isIndiaLocation((job as any).location || '') || isIndiaFriendlyRemoteJob((job as any).location || '') || ((job as any).job_type || '').toLowerCase() === 'remote')
+    .map(job => ({
+      ...job,
+      relevance: rankStrictJob(job, scoringSkills, queryTerms, profile.roleHints || [])
+    }))
+    .filter(job => job.relevance >= 28)
+    .sort((a: any, b: any) => {
+      const aIndia = isIndiaLocation(a.location || '') ? 1 : 0;
+      const bIndia = isIndiaLocation(b.location || '') ? 1 : 0;
+      return bIndia - aIndia || b.relevance - a.relevance;
+    });
 
-  return ranked.filter(job => job.portal !== 'arbeitnow').slice(0, 120);
+  const globalFallback = dedupeJobs([...adzunaJobs, ...remoteOkJobs, ...arbeitnowJobs, ...remotiveJobs])
+    .filter(job => job.title && job.company && job.url)
+    .map(job => ({
+      ...job,
+      relevance: rankStrictJob(job, scoringSkills, queryTerms, profile.roleHints || [])
+    }))
+    .filter(job => job.relevance >= 28)
+    .sort((a: any, b: any) => {
+      const aRemote = ((a.job_type || '').toLowerCase() === 'remote' || /worldwide|anywhere|remote/i.test(a.location || '')) ? 1 : 0;
+      const bRemote = ((b.job_type || '').toLowerCase() === 'remote' || /worldwide|anywhere|remote/i.test(b.location || '')) ? 1 : 0;
+      return bRemote - aRemote || b.relevance - a.relevance;
+    });
+
+  const rescueTerms = [...new Set([...(profile.roleHints || []), ...queryTerms.slice(0, 4), ...scoringSkills.slice(0, 4)].filter(Boolean))] as string[];
+  const lastResort = dedupeJobs([...adzunaJobs, ...remoteOkJobs, ...arbeitnowJobs, ...remotiveJobs])
+    .filter(job => job.title && job.company && job.url)
+    .map(job => {
+      const text = `${job.title || ''} ${(job as any).description || ''} ${(job as any).location || ''}`.toLowerCase();
+      const textHits = countAnyTermHits(text, rescueTerms);
+      const remoteBoost = (((job as any).job_type || '').toLowerCase() === 'remote' || /worldwide|anywhere|remote/i.test((job as any).location || '')) ? 2 : 0;
+      return {
+        ...job,
+        relevance: Math.min(100, textHits * 6 + remoteBoost)
+      };
+    })
+    .filter(job => job.relevance > 0)
+    .sort((a: any, b: any) => b.relevance - a.relevance);
+
+  const liveJobs = (relevant.length > 0 ? relevant : broadFallback.length > 0 ? broadFallback : globalFallback.length > 0 ? globalFallback : lastResort).slice(0, 60);
+  return [...liveJobs, ...buildPortalSearchLinks(profile)].slice(0, 80);
 }
 
 function rankJobRelevance(job: { title?: string; description?: string; location?: string }, terms: string[]) {
   const text = `${job.title || ''} ${job.description || ''} ${job.location || ''}`.toLowerCase();
+  const titleText = `${job.title || ''}`.toLowerCase();
   let score = 0;
 
   terms.forEach(term => {
     const matches = countSkillMatches(text, term);
     if (matches > 0) {
       score += term.includes(' ') ? 4 * matches : 2 * matches;
+    }
+    const titleMatches = countSkillMatches(titleText, term);
+    if (titleMatches > 0) {
+      score += term.includes(' ') ? 8 * titleMatches : 4 * titleMatches;
     }
   });
 
@@ -986,7 +1144,7 @@ const mockApiPlugin = () => ({
               ? matchedDomainSkills
               : searchSkills.filter(skill => !(ROLE_HINTS[domain] || []).includes(skill));
 
-             const liveJobs = await fetchLiveJobs(searchSkills);
+             const liveJobs = await fetchLiveJobs(profile);
             const scoredJobs = liveJobs
               .map((job: any, index: number) => ({
                 id: Date.now() + index,
@@ -1007,13 +1165,15 @@ const mockApiPlugin = () => ({
                   roleHints
                 )
               }))
-              .filter((job: any) => job.match_score >= 18 || isIndiaLocation(job.location || ''))
+              .filter((job: any) => job.portal?.endsWith('_search') || job.match_score >= 45)
               .sort((a: any, b: any) => b.match_score - a.match_score)
               .slice(0, 80);
 
             mockDb.matches = mockDb.matches.filter((job: any) => String(job.resume_id) !== String(resumeId));
             mockDb.matches.push(...scoredJobs);
-            return res.end(JSON.stringify({ jobs: scoredJobs, count: scoredJobs.length }));
+            const liveJobCount = scoredJobs.filter((job: any) => !isPortalSearchLink(job)).length;
+            const searchLinkCount = scoredJobs.filter((job: any) => isPortalSearchLink(job)).length;
+            return res.end(JSON.stringify({ jobs: scoredJobs, count: scoredJobs.length, live_job_count: liveJobCount, search_link_count: searchLinkCount }));
           }
 
           // Job Fetching Mock (FIXED: USES DETECTED DOMAIN)

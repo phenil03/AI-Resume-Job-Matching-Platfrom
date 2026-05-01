@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Lock, Chrome, Loader2, CheckCircle } from 'lucide-react';
+import { Lock, Loader2, CheckCircle } from 'lucide-react';
+import { useGoogleLogin } from '@react-oauth/google';
+import axios from 'axios';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 
 interface AuthProps {
@@ -8,20 +10,33 @@ interface AuthProps {
   onCancel?: () => void;
 }
 
-interface DemoGoogleAccount {
-  id: string;
-  email: string;
-  user_metadata: {
-    full_name?: string;
-    avatar_url?: string;
-  };
+function GoogleMark() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true">
+      <path
+        d="M21.8 12.2c0-.7-.1-1.4-.2-2H12v3.8h5.5a4.7 4.7 0 0 1-2 3.1v2.6h3.3c1.9-1.8 3-4.4 3-7.5Z"
+        fill="#4285F4"
+      />
+      <path
+        d="M12 22c2.7 0 5-1 6.7-2.7l-3.3-2.6c-.9.6-2 .9-3.4.9-2.6 0-4.8-1.8-5.6-4.1H3.1v2.7A10 10 0 0 0 12 22Z"
+        fill="#34A853"
+      />
+      <path
+        d="M6.4 13.5A6 6 0 0 1 6 12c0-.5.1-1 .3-1.5V7.8H3.1A10 10 0 0 0 2 12c0 1.6.4 3.1 1.1 4.5l3.3-3Z"
+        fill="#FBBC05"
+      />
+      <path
+        d="M12 6.4c1.5 0 2.8.5 3.8 1.4l2.8-2.8A10 10 0 0 0 3.1 7.8l3.3 2.7C7.2 8.2 9.4 6.4 12 6.4Z"
+        fill="#EA4335"
+      />
+    </svg>
+  );
 }
 
 export default function Auth({ onSuccess, onCancel }: AuthProps) {
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
   const [googleStep, setGoogleStep] = useState(0);
-  const [googleAccounts, setGoogleAccounts] = useState<DemoGoogleAccount[]>([]);
   const [formData, setFormData] = useState({ email: '', password: '', name: '' });
   const [error, setError] = useState<string | null>(null);
 
@@ -50,7 +65,7 @@ export default function Auth({ onSuccess, onCancel }: AuthProps) {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    
+
     try {
       if (!isSupabaseConfigured) {
         const endpoint = isLogin ? '/api/auth/login' : '/api/auth/signup';
@@ -70,11 +85,10 @@ export default function Auth({ onSuccess, onCancel }: AuthProps) {
         return;
       }
 
-      // Standard Supabase Auth Pattern
-      const { data, error: authError } = isLogin 
+      const { data, error: authError } = isLogin
         ? await supabase.auth.signInWithPassword({ email: formData.email, password: formData.password })
-        : await supabase.auth.signUp({ 
-            email: formData.email, 
+        : await supabase.auth.signUp({
+            email: formData.email,
             password: formData.password,
             options: { data: { full_name: formData.name } }
           });
@@ -91,175 +105,106 @@ export default function Auth({ onSuccess, onCancel }: AuthProps) {
     }
   };
 
-  const handleGoogleSignIn = async () => {
-    setLoading(true);
-    setGoogleStep(1);
-    setError(null);
-    
-    try {
-      if (isSupabaseConfigured) {
-        // PROPER SUPABASE GOOGLE AUTH CALL (Only if keys are present)
-        const { error: authError } = await supabase.auth.signInWithOAuth({
-          provider: 'google',
-          options: {
-            redirectTo: window.location.origin,
-            queryParams: {
-              prompt: 'select_account',
-              access_type: 'offline'
-            }
-          }
-        });
-        if (authError) throw authError;
-      } else {
-        const res = await fetch('/api/auth/google-accounts');
-        if (!res.ok) {
-          const errorData = await res.json().catch(() => ({}));
-          throw new Error(errorData.error || 'Google Sign-In failed.');
-        }
+  const handleGoogleSignIn = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      setLoading(true);
+      setGoogleStep(1);
+      setError(null);
 
-        const data = await res.json();
-        setGoogleAccounts(Array.isArray(data.accounts) ? data.accounts : []);
-        setGoogleStep(3);
+      try {
+        // Fetch user info from Google using the access token
+        const res = await axios.get('https://www.googleapis.com/oauth2/v3/userinfo', {
+          headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
+        });
+
+        const googleUser = res.data;
+        
+        // Map Google user info to our app's user format
+        const normalized = {
+          id: googleUser.sub,
+          email: googleUser.email,
+          user_metadata: {
+            full_name: googleUser.name,
+            avatar_url: googleUser.picture,
+          }
+        };
+
+        setGoogleStep(2);
+        setTimeout(() => {
+          onSuccess(normalized);
+        }, 1000);
+      } catch (err) {
+        console.error('Failed to fetch user info:', err);
+        setError('Failed to retrieve profile info from Google.');
+        setGoogleStep(0);
+      } finally {
         setLoading(false);
       }
-    } catch (err: any) {
-      setError(err.message || 'Google Sign-In failed.');
+    },
+    onError: (error) => {
+      console.error('Google Login Failed:', error);
+      setError('Google Sign-In was cancelled or failed.');
       setGoogleStep(0);
       setLoading(false);
-    }
-  };
-
-  const handleDemoGoogleAccountSelect = async (account: DemoGoogleAccount) => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const res = await fetch('/api/auth/google', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: account.email })
-      });
-
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Unable to sign in with the selected Google account.');
-      }
-
-      const data = await res.json();
-      setGoogleStep(2);
-      setTimeout(() => {
-        onSuccess(normalizeDemoUser(data.user));
-        setLoading(false);
-        setGoogleStep(0);
-      }, 250);
-    } catch (err: any) {
-      setError(err.message || 'Google Sign-In failed.');
-      setGoogleStep(3);
-      setLoading(false);
-    }
-  };
+    },
+  });
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         className="absolute inset-0 bg-slate-950/90 backdrop-blur-2xl"
         onClick={onCancel}
       />
-      
+
       <motion.div
         initial={{ opacity: 0, scale: 0.92, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.92, y: 20 }}
-        className="relative w-full max-w-md bg-slate-900 border border-white/10 rounded-[2.5rem] p-10 shadow-2xl overflow-hidden"
+        className="relative w-full max-w-md overflow-hidden rounded-[2.5rem] border border-white/10 bg-slate-900 p-10 text-white shadow-2xl"
       >
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500" />
-        
+        <div className="absolute top-0 left-0 h-1 w-full bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500" />
+
         <AnimatePresence mode="wait">
           {googleStep === 1 ? (
-             <motion.div key="g1" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-center py-10">
-               <div className="relative w-20 h-20 mx-auto mb-8">
-                 <div className="absolute inset-0 border-4 border-slate-800 rounded-2xl" />
-                 <div className="absolute inset-0 border-4 border-blue-500 rounded-2xl border-t-transparent animate-spin" />
-                 <Chrome className="absolute inset-0 m-auto w-8 h-8 text-blue-400" />
-               </div>
-               <h3 className="text-xl font-bold mb-1">Authenticating...</h3>
-               <p className="text-white/30 text-xs">Connecting to Google Identity Services</p>
-             </motion.div>
-          ) : googleStep === 2 ? (
-            <motion.div key="g2" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-10">
-              <div className="w-20 h-20 bg-emerald-500/20 rounded-2xl flex items-center justify-center mx-auto mb-8 border border-emerald-500/30">
-                <CheckCircle className="w-10 h-10 text-emerald-500" />
+            <motion.div key="g1" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="py-10 text-center">
+              <div className="mx-auto mb-8 flex h-20 w-20 items-center justify-center rounded-2xl border border-blue-500/30 bg-blue-500/10">
+                <Loader2 className="h-10 w-10 animate-spin text-blue-400" />
               </div>
-              <h3 className="text-2xl font-black mb-1 text-white">Verified</h3>
-              <p className="text-white/30 text-xs uppercase tracking-widest font-bold">Profile Synchronized</p>
+              <h3 className="mb-1 text-xl font-bold">Redirecting to Google...</h3>
+              <p className="text-xs text-white/30">Google will show the original sign-in screen.</p>
             </motion.div>
-          ) : googleStep === 3 ? (
-            <motion.div key="g3" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <div className="text-center mb-8">
-                <div className="inline-flex items-center gap-2 bg-blue-500/10 px-3 py-1 rounded-full border border-blue-500/20 mb-6">
-                  <Lock className="w-3 h-3 text-blue-400" />
-                  <span className="text-[9px] font-black text-blue-400 uppercase tracking-widest">Choose Account</span>
-                </div>
-                <h3 className="text-3xl font-black mb-2 tracking-tighter text-white">Select Google Account</h3>
-                <p className="text-white/30 text-sm font-medium">Pick the profile you want to use in this app.</p>
+          ) : googleStep === 2 ? (
+            <motion.div key="g2" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="py-10 text-center">
+              <div className="mx-auto mb-8 flex h-20 w-20 items-center justify-center rounded-2xl border border-emerald-500/30 bg-emerald-500/20">
+                <CheckCircle className="h-10 w-10 text-emerald-500" />
               </div>
-
-              <div className="space-y-3">
-                {googleAccounts.map((account) => {
-                  const displayName = account.user_metadata.full_name || account.email.split('@')[0];
-                  return (
-                    <button
-                      key={account.id}
-                      onClick={() => handleDemoGoogleAccountSelect(account)}
-                      disabled={loading}
-                      className="w-full p-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl flex items-center gap-4 text-left transition-all disabled:opacity-50"
-                    >
-                      <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center text-sm font-black shadow-lg shadow-blue-500/20">
-                        {displayName[0]?.toUpperCase() || 'G'}
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-sm font-bold text-white truncate">{displayName}</p>
-                        <p className="text-xs text-white/40 truncate">{account.email}</p>
-                      </div>
-                    </button>
-                  );
-                })}
-
-                <button
-                  onClick={() => {
-                    setGoogleStep(0);
-                    setLoading(false);
-                  }}
-                  className="w-full py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl text-xs font-bold transition-all"
-                >
-                  Back
-                </button>
-              </div>
+              <h3 className="mb-1 text-2xl font-black">Verified</h3>
+              <p className="text-xs font-bold uppercase tracking-widest text-white/30">Profile Synchronized</p>
             </motion.div>
           ) : (
             <motion.div key="main">
-              <div className="text-center mb-8">
-                <div className="inline-flex items-center gap-2 bg-blue-500/10 px-3 py-1 rounded-full border border-blue-500/20 mb-6">
-                   <Lock className="w-3 h-3 text-blue-400" />
-                   <span className="text-[9px] font-black text-blue-400 uppercase tracking-widest">Secure Portal</span>
+              <div className="mb-8 text-center">
+                <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-blue-500/20 bg-blue-500/10 px-3 py-1">
+                  <Lock className="h-3 w-3 text-blue-400" />
+                  <span className="text-[9px] font-black uppercase tracking-widest text-blue-400">Secure Portal</span>
                 </div>
-                <h3 className="text-4xl font-black mb-2 tracking-tighter text-white">
+                <h3 className="mb-2 text-4xl font-black tracking-tighter">
                   {isLogin ? 'Login' : 'Sign Up'}
                 </h3>
-                <p className="text-white/30 text-sm font-medium">Empower your career with AI automation.</p>
+                <p className="text-sm font-medium text-white/30">Empower your career with AI automation.</p>
               </div>
 
               <div className="space-y-4">
-                <button 
+                <button
                   onClick={handleGoogleSignIn}
                   disabled={loading}
-                  className="w-full h-14 bg-white hover:bg-slate-50 active:scale-[0.98] rounded-2xl flex items-center justify-center gap-4 transition-all shadow-xl shadow-white/5"
+                  className="flex h-14 w-full items-center justify-center gap-4 rounded-2xl bg-white shadow-xl shadow-white/5 transition-all hover:bg-slate-50 active:scale-[0.98] disabled:opacity-50"
                 >
-                  <Chrome className="w-5 h-5 text-[#4285F4]" />
-                  <span className="text-slate-900 font-bold text-sm">Continue with Google</span>
+                  <GoogleMark />
+                  <span className="text-sm font-semibold text-slate-900">Sign in with Google</span>
                 </button>
 
                 <div className="flex items-center gap-4 py-2 opacity-10">
@@ -269,7 +214,7 @@ export default function Auth({ onSuccess, onCancel }: AuthProps) {
                 </div>
 
                 {error && (
-                  <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-xs font-bold text-center">
+                  <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-center text-xs font-bold text-red-400">
                     {error}
                   </div>
                 )}
@@ -279,17 +224,17 @@ export default function Auth({ onSuccess, onCancel }: AuthProps) {
                     <input
                       type="text"
                       placeholder="NAME"
-                      className="w-full h-14 bg-white/5 border border-white/5 rounded-2xl px-6 text-white text-xs font-bold tracking-widest placeholder:text-white/20 outline-none focus:border-blue-500/50 transition-all uppercase"
+                      className="h-14 w-full rounded-2xl border border-white/5 bg-white/5 px-6 text-xs font-bold uppercase tracking-widest text-white placeholder:text-white/20 outline-none transition-all focus:border-blue-500/50"
                       required
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     />
                   )}
-                  
+
                   <input
                     type="email"
                     placeholder="EMAIL"
-                    className="w-full h-14 bg-white/5 border border-white/5 rounded-2xl px-6 text-white text-xs font-bold tracking-widest placeholder:text-white/20 outline-none focus:border-blue-500/50 transition-all uppercase"
+                    className="h-14 w-full rounded-2xl border border-white/5 bg-white/5 px-6 text-xs font-bold uppercase tracking-widest text-white placeholder:text-white/20 outline-none transition-all focus:border-blue-500/50"
                     required
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
@@ -298,7 +243,7 @@ export default function Auth({ onSuccess, onCancel }: AuthProps) {
                   <input
                     type="password"
                     placeholder="PASSWORD"
-                    className="w-full h-14 bg-white/5 border border-white/5 rounded-2xl px-6 text-white text-xs font-bold tracking-widest placeholder:text-white/20 outline-none focus:border-blue-500/50 transition-all uppercase"
+                    className="h-14 w-full rounded-2xl border border-white/5 bg-white/5 px-6 text-xs font-bold uppercase tracking-widest text-white placeholder:text-white/20 outline-none transition-all focus:border-blue-500/50"
                     required
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
@@ -307,15 +252,18 @@ export default function Auth({ onSuccess, onCancel }: AuthProps) {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full h-14 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-2xl font-black text-white active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-2 mt-4 uppercase tracking-widest text-xs"
+                    className="mt-4 flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-600 text-xs font-black uppercase tracking-widest text-white transition-all active:scale-[0.98] disabled:opacity-50"
                   >
-                    {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <span>Proceed to Vault</span>}
+                    {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <span>Proceed to Vault</span>}
                   </button>
                 </form>
 
                 <div className="pt-6 text-center">
-                  <button onClick={() => setIsLogin(!isLogin)} className="text-[10px] font-black text-white/20 hover:text-white transition-colors uppercase tracking-[0.2em]">
-                    {isLogin ? "Need a profile? Sign Up" : "Returning? Log In"}
+                  <button
+                    onClick={() => setIsLogin(!isLogin)}
+                    className="text-[10px] font-black uppercase tracking-[0.2em] text-white/20 transition-colors hover:text-white"
+                  >
+                    {isLogin ? 'Need a profile? Sign Up' : 'Returning? Log In'}
                   </button>
                 </div>
               </div>

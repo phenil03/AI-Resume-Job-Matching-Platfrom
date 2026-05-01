@@ -10,4 +10,7 @@ requests
 beautifulsoup4
 selenium
 webdriver-manager
+httpx
+feedparser
+python-dotenv
 pydantic

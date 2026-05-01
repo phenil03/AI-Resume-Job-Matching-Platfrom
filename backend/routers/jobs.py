@@ -1,9 +1,9 @@
 # backend/routers/jobs.py
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 from services.matcher import match_jobs
-from services.scraper import get_real_time_jobs
-from models.schemas import JobMatch
+from services.scraper import aggregate_jobs, get_real_time_jobs
+from models.schemas import AggregatedJob, JobMatch
 from services.parser import extract_skills
 import json
 import os
@@ -13,6 +13,26 @@ router = APIRouter(prefix="/jobs", tags=["Jobs"])
 
 class MatchRequest(BaseModel):
     resume_text: str
+
+class AggregateJobsRequest(BaseModel):
+    role: str
+    location: str = "India"
+
+@router.post("/aggregate", response_model=List[AggregatedJob])
+async def aggregate_jobs_endpoint(request: AggregateJobsRequest):
+    try:
+        return aggregate_jobs(request.role, request.location)
+    except Exception as e:
+        print(f"[API ERROR] /jobs/aggregate: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/aggregate", response_model=List[AggregatedJob])
+async def aggregate_jobs_query(role: str = Query(...), location: str = Query("India")):
+    try:
+        return aggregate_jobs(role, location)
+    except Exception as e:
+        print(f"[API ERROR] GET /jobs/aggregate: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/match", response_model=List[JobMatch])
 async def match_jobs_endpoint(request: MatchRequest):
