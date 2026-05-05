@@ -95,22 +95,22 @@ export default function ResumeUpload({ onResumeUploaded }: Props) {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8"
+        className="bg-[#FFFFFF] backdrop-blur-sm border border-[#E8E8E8] rounded-[12px] p-8"
       >
         <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold mb-3 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+          <h2 className="text-3xl font-bold mb-3 text-[#111111] ">
             Upload Your Resume
           </h2>
-          <p className="text-white/70 text-lg">
+          <p className="text-[#444444] text-lg">
             Start your automated job application journey by uploading your resume
           </p>
         </div>
 
         <motion.div
-          className={`border-2 border-dashed rounded-xl p-12 text-center transition-all ${
+          className={`border-2 border-dashed border-[#E0E0E0] rounded-[12px] p-12 text-center transition-all ${
             dragActive 
-              ? 'border-blue-500 bg-blue-500/10' 
-              : 'border-white/20 hover:border-white/40 hover:bg-white/5'
+              ? 'border-[#1D9E75] bg-[#E6F1FB]' 
+              : 'border-[#E0E0E0] hover:border-[#1D9E75] hover:bg-[#FFFFFF]'
           }`}
           onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
           onDragLeave={() => setDragActive(false)}
@@ -128,7 +128,7 @@ export default function ResumeUpload({ onResumeUploaded }: Props) {
           
           <label htmlFor="resume-upload" className="cursor-pointer">
             <motion.div
-              className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center"
+              className="w-20 h-20 mx-auto mb-6 bg-[#1D9E75] rounded-[12px] flex items-center justify-center"
               whileHover={{ rotate: 5, scale: 1.1 }}
             >
               {uploading ? (
@@ -141,18 +141,18 @@ export default function ResumeUpload({ onResumeUploaded }: Props) {
             <h3 className="text-xl font-semibold mb-2">
               {uploading ? 'Uploading...' : 'Drop your resume here'}
             </h3>
-            <p className="text-white/60 mb-4">
+            <p className="text-[#888888] mb-4">
               or click to browse files
             </p>
-            <p className="text-sm text-white/50">
+            <p className="text-sm text-[#888888]">
               Supports PDF, DOC, DOCX, TXT
             </p>
           </label>
         </motion.div>
 
         {error && (
-          <div className="mt-6 bg-red-500/20 border border-red-500/30 rounded-xl p-4 text-center">
-            <p className="text-red-300">{error}</p>
+          <div className="mt-6 bg-[#FCEBEB] border border-[#791F1F]/20 rounded-[12px] p-4 text-center">
+            <p className="text-[#791F1F]">{error}</p>
           </div>
         )}
 
@@ -167,11 +167,11 @@ export default function ResumeUpload({ onResumeUploaded }: Props) {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.1 }}
-              className="bg-white/5 border border-white/10 rounded-xl p-4 text-center"
+              className="bg-[#FFFFFF] border border-[#E8E8E8] rounded-[12px] p-4 text-center"
             >
-              <feature.icon className="w-8 h-8 mx-auto mb-2 text-blue-400" />
+              <feature.icon className="w-8 h-8 mx-auto mb-2 text-[#1D9E75]" />
               <h4 className="font-semibold text-sm mb-1">{feature.label}</h4>
-              <p className="text-xs text-white/60">{feature.desc}</p>
+              <p className="text-xs text-[#888888]">{feature.desc}</p>
             </motion.div>
           ))}
         </div>

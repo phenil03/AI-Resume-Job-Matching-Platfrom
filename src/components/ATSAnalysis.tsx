@@ -1,378 +1,316 @@
-import { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
-import {
-  AlertCircle,
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  Target, 
+  CheckCircle, 
+  AlertCircle, 
+  TrendingUp, 
+  Briefcase, 
+  RefreshCw, 
+  Loader2, 
   ArrowRight,
-  Briefcase,
-  CheckCircle,
-  Loader2,
-  RefreshCw,
-  Target
+  Zap,
+  Sparkles,
+  Shield,
+  Layers,
+  Cpu,
+  ChevronRight,
+  Award
 } from 'lucide-react';
 
-interface Resume {
-  id: number;
-  filename: string;
-  content: string;
-  ats_score: number | null;
-}
-
-interface ATSResult {
-  score: number;
-  suggestions: string[];
-  keywords_found: string[];
-  missing_keywords?: string[];
-  domain?: string;
-  seniority?: string;
-  breakdown?: Record<string, number>;
-  diagnostics?: {
-    sections_found?: string[];
-    sections_missing?: string[];
-    target_titles?: string[];
-    matched_titles?: string[];
-    required_years?: number | null;
-    estimated_years?: number | null;
-    parse_warnings?: string[];
-  };
-}
-
 interface Props {
-  resume: Resume;
+  resume: {
+    id: number;
+    filename: string;
+    content: string;
+  };
   onComplete: (score: number) => void;
 }
 
 const API_BASE = import.meta.env.VITE_BACKEND_URL || '';
 
-const formatDomainLabel = (domain?: string) =>
-  (domain || 'general')
-    .split('_')
-    .map(part => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(' ');
-
-const getDomainQueryValue = (domain?: string) =>
-  (domain || 'general').replace(/_/g, ' ');
+const DOMAIN_OPTIONS = [
+  { value: 'software_engineering', label: 'Software Engineering', icon: Cpu, color: 'text-blue-500' },
+  { value: 'data_science', label: 'Data Science & AI', icon: Sparkles, color: 'text-purple-500' },
+  { value: 'cybersecurity', label: 'Cybersecurity', icon: Shield, color: 'text-rose-500' },
+  { value: 'frontend', label: 'Frontend Development', icon: Layers, color: 'text-emerald-500' },
+  { value: 'backend', label: 'Backend Development', icon: Cpu, color: 'text-indigo-500' },
+  { value: 'fullstack', label: 'Full Stack Development', icon: Layers, color: 'text-cyan-500' },
+  { value: 'devops', label: 'DevOps & Cloud', icon: Shield, color: 'text-orange-500' },
+  { value: 'product_management', label: 'Product Management', icon: Target, color: 'text-amber-500' },
+  { value: 'digital_marketing', label: 'Digital Marketing', icon: Target, color: 'text-pink-500' },
+  { value: 'ui_ux_design', label: 'UI/UX Design', icon: Target, color: 'text-violet-500' }
+];
 
 export default function ATSAnalysis({ resume, onComplete }: Props) {
-  const [analyzing, setAnalyzing] = useState(true);
-  const [result, setResult] = useState<ATSResult | null>(null);
-  const [jobDescription, setJobDescription] = useState('');
+  const [analyzing, setAnalyzing] = useState(false);
+  const [result, setResult] = useState<{
+    score: number;
+    domain: string;
+    suggestions: string[];
+    keywords_found: string[];
+    seniority?: string;
+    breakdown?: {
+      keyword_match: number;
+      formatting_parsability: number;
+      work_experience_relevance: number;
+      skills_match: number;
+      education_certifications: number;
+      title_alignment: number;
+    };
+  } | null>(null);
+  const [selectedDomain, setSelectedDomain] = useState<string | null>(null);
   const [requestError, setRequestError] = useState<string | null>(null);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [pendingDomain, setPendingDomain] = useState<string | null>(null);
 
   useEffect(() => {
-    analyzeResume('');
+    analyzeResume();
   }, [resume.id]);
 
-  const analyzeResume = async (overrideJobDescription?: string) => {
+  const handleDomainChange = (newDomain: string) => {
+    setPendingDomain(newDomain);
+    setShowConfirmModal(true);
+  };
+
+  const confirmDomainChange = () => {
+    if (pendingDomain) {
+      setSelectedDomain(pendingDomain);
+      analyzeResume(pendingDomain);
+    }
+    setShowConfirmModal(false);
+  };
+
+  const analyzeResume = async (forceDomain?: string) => {
     setAnalyzing(true);
     setRequestError(null);
-
     try {
-      const res = await fetch(`${API_BASE}/api/ats-analyze`, {
+      const response = await fetch(`${API_BASE}/api/ats-analyze`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           resume_id: resume.id,
-          job_description: overrideJobDescription ?? jobDescription
+          job_description: '',
+          domain_override: forceDomain || selectedDomain
         })
       });
 
-      const data = await res.json();
-
-      if (res.ok && data.score !== undefined) {
-        setResult({
-          score: data.score,
-          suggestions: data.suggestions || [],
-          keywords_found: data.keywords_found || [],
-          missing_keywords: data.missing_keywords || [],
-          domain: data.domain,
-          seniority: data.seniority,
-          breakdown: data.breakdown || {},
-          diagnostics: data.diagnostics || {}
-        });
-      } else {
-        setResult(null);
-        setRequestError(data.error || 'ATS analysis failed.');
+      if (!response.ok) throw new Error('Analysis failed');
+      const data = await response.json();
+      setResult(data);
+      if (data.domain && !selectedDomain) {
+        setSelectedDomain(data.domain);
       }
-    } catch (error) {
-      console.error('ATS analysis error:', error);
-      setResult(null);
-      setRequestError('Could not analyze this resume right now.');
+    } catch (err) {
+      setRequestError('Analysis error.');
     } finally {
       setAnalyzing(false);
     }
   };
 
-  const getScoreColor = (score: number) => {
-    if (score >= 80) return 'from-green-500 to-emerald-600';
-    if (score >= 60) return 'from-yellow-500 to-orange-600';
-    return 'from-red-500 to-pink-600';
+  const formatDomainLabel = (val: string) => {
+    return DOMAIN_OPTIONS.find(opt => opt.value === val)?.label || val;
   };
 
-  const getScoreLabel = (score: number) => {
-    if (score >= 80) return 'Excellent';
-    if (score >= 60) return 'Good';
-    if (score >= 40) return 'Fair';
-    return 'Needs Improvement';
+  const getDomainInfo = (val: string) => {
+    return DOMAIN_OPTIONS.find(opt => opt.value === val) || { icon: Shield, color: 'text-gray-500' };
   };
 
-  const formatBreakdownLabel = (label: string) =>
-    label
-      .split('_')
-      .map(part => part.charAt(0).toUpperCase() + part.slice(1))
-      .join(' ');
-
-  const handleDetectedDomainClick = () => {
-    if (!result?.domain) return;
-    const domainQuery = getDomainQueryValue(result.domain);
-    setJobDescription(domainQuery);
-    analyzeResume(domainQuery);
-  };
+  const currentDomainInfo = getDomainInfo(selectedDomain || '');
+  const DomainIcon = currentDomainInfo.icon;
 
   return (
-    <div className="max-w-5xl mx-auto">
+    <div className="max-w-4xl mx-auto space-y-4 pb-12">
+      {/* Header - Ultra Compact */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8"
+        className="bg-white border border-[#E8E8E8] rounded-[20px] px-6 py-3.5 flex items-center justify-between shadow-sm"
       >
-        <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold mb-3 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-            ATS Score Analysis
-          </h2>
-          <p className="text-white/70">
-            Weighted ATS scoring across keywords, sections, impact, titles, experience, and semantic relevance
-            <span className="ml-2 px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 text-xs font-mono border border-blue-500/30">
-              Live-Session: {Math.floor(Date.now() / 1000).toString().slice(-4)}
-            </span>
-          </p>
-        </div>
-
-        <div className="mb-6 bg-white/5 border border-white/10 rounded-xl p-5">
-          <div className="flex items-center gap-3 mb-3">
-            <Briefcase className="w-5 h-5 text-blue-400" />
-            <h3 className="text-lg font-semibold">Target Job Description</h3>
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 bg-[#1D9E75]/10 rounded-xl flex items-center justify-center text-[#1D9E75]">
+            <Sparkles className="w-4.5 h-4.5" />
           </div>
-          <p className="text-sm text-white/60 mb-3">
-            Paste a job description for the most accurate ATS score. Without it, the analyzer uses your resume&apos;s detected domain and role signals.
-          </p>
-          {result?.domain && (
-            <button
-              type="button"
-              onClick={handleDetectedDomainClick}
-              disabled={analyzing}
-              className="mb-3 inline-flex items-center gap-2 rounded-full border border-cyan-400/40 bg-cyan-400/10 px-4 py-2 text-sm font-semibold text-cyan-200 transition hover:border-cyan-300/70 hover:bg-cyan-400/15 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              <Target className="h-4 w-4" />
-              Use detected domain: {formatDomainLabel(result.domain)}
-            </button>
-          )}
-          <textarea
-            value={jobDescription}
-            onChange={(e) => setJobDescription(e.target.value)}
-            placeholder="Paste the target job description here for exact ATS keyword, title, and experience scoring..."
-            className="w-full min-h-[140px] rounded-xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-blue-500/60"
-          />
-          <div className="mt-3 flex flex-wrap gap-3">
-            <button
-              onClick={() => analyzeResume()}
-              disabled={analyzing}
-              className="inline-flex items-center gap-2 rounded-xl bg-blue-500 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {analyzing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-              Re-run ATS Analysis
-            </button>
-            <p className="text-xs text-white/45 self-center">
-              Most companies auto-filter resumes below roughly 60 to 75.
-            </p>
+          <div>
+            <h2 className="text-lg font-black text-[#111111] tracking-tighter leading-none">ATS Intelligence</h2>
+            <div className={`flex items-center gap-1.5 mt-1 text-[9px] font-black uppercase tracking-widest ${currentDomainInfo.color}`}>
+              <DomainIcon className="w-2.5 h-2.5" />
+              {formatDomainLabel(selectedDomain || 'Detecting...')}
+            </div>
           </div>
         </div>
 
+        <div className="flex items-center gap-2">
+          <select
+            value={selectedDomain || ''}
+            onChange={(e) => handleDomainChange(e.target.value)}
+            className="rounded-[10px] border border-[#E8E8E8] bg-[#F8F9FB] px-3 py-2 text-[10px] font-black text-[#111111] focus:outline-none appearance-none cursor-pointer min-w-[150px]"
+          >
+            {!selectedDomain && <option value="">Auto-Detecting...</option>}
+            {DOMAIN_OPTIONS.map(opt => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
+          <button
+            onClick={() => analyzeResume()}
+            disabled={analyzing}
+            className="p-2 bg-[#1D9E75] text-white rounded-[10px] hover:bg-[#0F6E56] transition-all disabled:opacity-50"
+          >
+            {analyzing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+          </button>
+        </div>
+      </motion.div>
+
+      <AnimatePresence mode="wait">
         {analyzing ? (
-          <div className="text-center py-16">
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
-              className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center"
-            >
-              <Target className="w-12 h-12" />
-            </motion.div>
-            <h3 className="text-xl font-semibold mb-2">Analyzing Resume...</h3>
-            <p className="text-white/60">Checking parse quality, keywords, section coverage, impact, titles, experience, and semantic fit</p>
-          </div>
+          <motion.div
+            key="loading"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="py-16 text-center bg-white border border-[#E8E8E8] rounded-[24px]"
+          >
+            <Loader2 className="w-8 h-8 text-[#1D9E75] animate-spin mx-auto mb-2" />
+            <p className="text-[10px] font-black text-[#111111] uppercase tracking-widest">Parsing Vector...</p>
+          </motion.div>
         ) : result ? (
-          <div className="space-y-6">
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              className="relative"
-            >
-              <div className="bg-gradient-to-br from-white/10 to-white/5 border border-white/20 rounded-2xl p-8 text-center">
-                <div className={`w-40 h-40 mx-auto mb-4 bg-gradient-to-br ${getScoreColor(result.score)} rounded-full flex items-center justify-center relative`}>
-                  <div className="absolute inset-2 bg-slate-950 rounded-full flex items-center justify-center">
-                    <div>
-                      <div className="text-5xl font-bold">{result.score}</div>
-                      <div className="text-sm text-white/70">/ 100</div>
+          <motion.div
+            key="result"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="space-y-4"
+          >
+            {/* Dashboard Row - High Density */}
+            <div className="bg-white border border-[#E8E8E8] rounded-[24px] p-6 shadow-sm overflow-hidden relative">
+              <div className="flex flex-col md:flex-row items-center gap-8 relative z-10">
+                {/* Compact Score Circle */}
+                <div className="relative w-32 h-32 shrink-0">
+                  <svg className="w-full h-full transform -rotate-90">
+                    <circle cx="64" cy="64" r="58" stroke="#F8F9FB" strokeWidth="8" fill="none" />
+                    <motion.circle
+                      cx="64" cy="64" r="58" stroke="#1D9E75" strokeWidth="10" fill="none"
+                      strokeDasharray="364"
+                      initial={{ strokeDashoffset: 364 }}
+                      animate={{ strokeDashoffset: 364 - (364 * (result.score / 100)) }}
+                      transition={{ duration: 1.5 }}
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <span className="text-4xl font-black text-[#111111] tracking-tighter">{result.score}%</span>
+                    <div className="flex items-center gap-1 px-2 py-0.5 bg-[#1D9E75] text-white rounded-full text-[7px] font-black uppercase tracking-widest mt-1">
+                      <Award className="w-2 h-2" />
+                      ATS Ready
                     </div>
                   </div>
                 </div>
-                <h3 className="text-2xl font-bold mb-2">{getScoreLabel(result.score)}</h3>
-                <p className="text-white/70">Your resume is {result.score}% optimized for ATS systems</p>
-                {result.domain && (
-                  <button
-                    type="button"
-                    onClick={handleDetectedDomainClick}
-                    disabled={analyzing}
-                    className="mt-2 text-sm text-blue-300/90 underline decoration-blue-400/40 underline-offset-4 transition hover:text-cyan-300 disabled:cursor-not-allowed disabled:no-underline disabled:opacity-60"
-                  >
-                    Detected domain: {formatDomainLabel(result.domain)}
-                  </button>
-                )}
-                {result.seniority && (
-                  <p className="mt-1 text-sm text-cyan-300/90">
-                    Seniority profile: {result.seniority}
-                  </p>
-                )}
-              </div>
-            </motion.div>
 
-            {!!result.breakdown && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.15 }}
-                className="grid gap-3 md:grid-cols-2 xl:grid-cols-3"
-              >
-                {Object.entries(result.breakdown).map(([key, value]) => (
-                  <div key={key} className="bg-white/5 border border-white/10 rounded-xl p-4">
-                    <div className="flex items-center justify-between gap-3 mb-2">
-                      <p className="text-sm font-medium text-white/75">{formatBreakdownLabel(key)}</p>
-                      <span className="text-lg font-bold text-white">{value}</span>
+                {/* Metrics Grid */}
+                <div className="grid grid-cols-2 gap-3 w-full">
+                  {[
+                    { label: 'Keywords', value: result.breakdown?.keyword_match || 0, icon: Target, color: 'text-blue-500', bg: 'bg-blue-50' },
+                    { label: 'Formatting', value: result.breakdown?.formatting_parsability || 0, icon: CheckCircle, color: 'text-emerald-500', bg: 'bg-emerald-50' },
+                    { label: 'Skills Match', value: result.breakdown?.skills_match || 0, icon: TrendingUp, color: 'text-orange-500', bg: 'bg-orange-50' },
+                    { label: 'Experience', value: result.breakdown?.work_experience_relevance || 0, icon: Briefcase, color: 'text-purple-500', bg: 'bg-purple-50' }
+                  ].map((item) => (
+                    <div key={item.label} className="bg-[#F8F9FB] p-3 rounded-[12px] border border-[#E8E8E8] flex items-center gap-3 group hover:bg-white hover:shadow-md transition-all">
+                      <div className={`w-9 h-9 ${item.bg} ${item.color} rounded-lg flex items-center justify-center shrink-0 shadow-inner`}>
+                        <item.icon className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <div className="text-lg font-black text-[#111111] leading-none mb-1">{item.value}%</div>
+                        <div className="text-[8px] font-bold text-gray-400 uppercase tracking-widest leading-none">{item.label}</div>
+                      </div>
                     </div>
-                    <div className="h-2 rounded-full bg-white/10 overflow-hidden">
-                      <div
-                        className="h-full rounded-full bg-gradient-to-r from-blue-500 to-cyan-400"
-                        style={{ width: `${Math.min(100, value * 8)}%` }}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </motion.div>
-            )}
-
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2 }}
-              className="bg-white/5 border border-white/10 rounded-xl p-6"
-            >
-              <div className="flex items-center gap-3 mb-4">
-                <CheckCircle className="w-6 h-6 text-green-400" />
-                <h3 className="text-xl font-semibold">Keywords Found</h3>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {result.keywords_found.map((keyword, i) => (
-                  <motion.span
-                    key={`${keyword}-${i}`}
-                    initial={{ opacity: 0, scale: 0 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.3 + i * 0.05 }}
-                    className="px-3 py-1.5 bg-green-500/20 border border-green-500/30 rounded-lg text-sm text-green-300"
-                  >
-                    {keyword}
-                  </motion.span>
-                ))}
-              </div>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.4 }}
-              className="bg-white/5 border border-white/10 rounded-xl p-6"
-            >
-              <div className="flex items-center gap-3 mb-4">
-                <AlertCircle className="w-6 h-6 text-blue-400" />
-                <h3 className="text-xl font-semibold">Improvement Suggestions</h3>
-              </div>
-              <div className="space-y-3">
-                {result.suggestions.map((suggestion, i) => (
-                  <motion.div
-                    key={`${suggestion}-${i}`}
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.5 + i * 0.1 }}
-                    className="flex items-start gap-3 p-3 bg-white/5 rounded-lg"
-                  >
-                    <div className="w-6 h-6 bg-blue-500/20 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <span className="text-xs font-bold text-blue-400">{i + 1}</span>
-                    </div>
-                    <p className="text-white/80 text-sm">{suggestion}</p>
-                  </motion.div>
-                ))}
-              </div>
-            </motion.div>
-
-            {result.diagnostics && (
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.45 }}
-                className="bg-white/5 border border-white/10 rounded-xl p-6"
-              >
-                <div className="flex items-center gap-3 mb-4">
-                  <Target className="w-6 h-6 text-cyan-400" />
-                  <h3 className="text-xl font-semibold">ATS Diagnostics</h3>
+                  ))}
                 </div>
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="rounded-xl bg-white/5 p-4">
-                    <p className="text-sm font-semibold text-white mb-2">Detected Sections</p>
-                    <p className="text-sm text-white/70">
-                      {result.diagnostics.sections_found?.join(', ') || 'No clear sections detected'}
-                    </p>
-                  </div>
-                  <div className="rounded-xl bg-white/5 p-4">
-                    <p className="text-sm font-semibold text-white mb-2">Missing Sections</p>
-                    <p className="text-sm text-white/70">
-                      {result.diagnostics.sections_missing?.join(', ') || 'None'}
-                    </p>
-                  </div>
-                  <div className="rounded-xl bg-white/5 p-4">
-                    <p className="text-sm font-semibold text-white mb-2">Target Titles</p>
-                    <p className="text-sm text-white/70">
-                      {result.diagnostics.target_titles?.join(', ') || 'No target title extracted yet'}
-                    </p>
-                  </div>
-                  <div className="rounded-xl bg-white/5 p-4">
-                    <p className="text-sm font-semibold text-white mb-2">Experience Fit</p>
-                    <p className="text-sm text-white/70">
-                      Required: {result.diagnostics.required_years ?? 'Not specified'} years
-                      <br />
-                      Estimated from resume: {result.diagnostics.estimated_years ?? 'Not detected'} years
-                    </p>
-                  </div>
-                </div>
-              </motion.div>
-            )}
+              </div>
+            </div>
 
-            <motion.button
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6 }}
+            {/* Strategic Insights & Data */}
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="bg-white border border-[#E8E8E8] rounded-[24px] p-5 shadow-sm">
+                <h3 className="text-[9px] font-black uppercase tracking-widest text-[#111111] mb-4 flex items-center gap-2">
+                  <AlertCircle className="w-3 h-3 text-orange-500" />
+                  Strategy Updates
+                </h3>
+                <div className="space-y-2">
+                  {result.suggestions.slice(0, 3).map((s, i) => (
+                    <div key={i} className="text-[10px] text-[#555555] font-medium leading-relaxed bg-[#F8F9FB] p-2.5 rounded-[10px] border border-transparent hover:border-orange-100 transition-all">
+                      • {s}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="bg-white border border-[#E8E8E8] rounded-[24px] p-5 shadow-sm">
+                <h3 className="text-[9px] font-black uppercase tracking-widest text-[#111111] mb-4 flex items-center gap-2">
+                  <Sparkles className="w-3 h-3 text-[#1D9E75]" />
+                  Keyword Signals
+                </h3>
+                <div className="flex flex-wrap gap-1.5">
+                  {result.keywords_found.slice(0, 10).map((k, i) => (
+                    <span key={i} className="px-2.5 py-1.5 bg-[#F8F9FB] border border-[#E8E8E8] rounded-[8px] text-[8px] font-bold text-gray-500 hover:text-[#1D9E75] hover:border-[#1D9E75]/30 transition-all">
+                      {k}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Action Button */}
+            <button
               onClick={() => onComplete(result.score)}
-              className="w-full py-4 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl font-semibold text-lg flex items-center justify-center gap-2 hover:from-blue-600 hover:to-purple-700 transition-all"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+              className="w-full py-4 bg-[#111111] rounded-[16px] font-black uppercase tracking-[0.4em] text-[9px] text-white hover:bg-[#1D9E75] transition-all flex items-center justify-center gap-2 shadow-lg"
             >
-              Find Matching Jobs
-              <ArrowRight className="w-5 h-5" />
-            </motion.button>
-          </div>
+              Analyze Job Matchings
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </motion.div>
         ) : (
-          <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-200">
-            {requestError || 'No ATS result available.'}
+          <div className="p-8 bg-rose-50 text-rose-600 rounded-[24px] text-center text-[10px] font-black uppercase tracking-widest">
+            {requestError || 'Service Offline'}
           </div>
         )}
-      </motion.div>
+      </AnimatePresence>
+
+      {/* Confirmation Modal */}
+      <AnimatePresence>
+        {showConfirmModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-[#111111]/40 backdrop-blur-sm"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white rounded-[24px] p-8 max-w-xs w-full shadow-2xl border border-[#E8E8E8]"
+            >
+              <h3 className="text-xl font-black text-center mb-1 tracking-tighter">Recalibrate?</h3>
+              <p className="text-[10px] text-center mb-6 text-gray-500 font-medium leading-relaxed px-4">
+                Update weights for <span className="text-[#1D9E75] font-black">{formatDomainLabel(pendingDomain || '')}</span>?
+              </p>
+              <div className="flex flex-col gap-2">
+                <button
+                  onClick={confirmDomainChange}
+                  className="w-full py-3 bg-[#1D9E75] text-white text-[9px] font-black uppercase tracking-widest rounded-[10px]"
+                >
+                  Confirm & Update
+                </button>
+                <button
+                  onClick={() => setShowConfirmModal(false)}
+                  className="w-full py-3 bg-white border border-[#E8E8E8] text-gray-400 text-[9px] font-black uppercase tracking-widest rounded-[10px]"
+                >
+                  Cancel
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

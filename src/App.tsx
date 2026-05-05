@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Upload, FileText, Target, Zap, CheckCircle, XCircle, Clock, TrendingUp, Briefcase, Globe, Loader2, LogOut, User as UserIcon, Lock, Bell, X } from 'lucide-react';
+import { Upload, FileText, Target, Zap, CheckCircle, XCircle, Clock, TrendingUp, Briefcase, Globe, Loader2, LogOut, User as UserIcon, Lock, Bell, X, Calendar } from 'lucide-react';
 import { googleLogout } from '@react-oauth/google';
 
 // Components
@@ -35,8 +35,8 @@ interface User {
 
 const LoadingFallback = () => (
   <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
-    <Loader2 className="w-12 h-12 text-blue-500 animate-spin" />
-    <p className="text-white/60 animate-pulse">Loading experience...</p>
+    <Loader2 className="w-12 h-12 text-[#1D9E75] animate-spin" />
+    <p className="text-[#888888] animate-pulse">Loading experience...</p>
   </div>
 );
 
@@ -170,27 +170,27 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#020617] text-white selection:bg-blue-500/30 selection:text-blue-200">
+    <div className="min-h-screen bg-[#F8F9FB] text-[#444444] selection:bg-[#1D9E75]/20 selection:text-[#111111]">
       {/* Background Decor */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 -left-1/4 w-1/2 h-1/2 bg-blue-600/10 blur-[120px] rounded-full animate-pulse" />
-        <div className="absolute bottom-0 -right-1/4 w-1/2 h-1/2 bg-purple-600/10 blur-[120px] rounded-full animate-pulse" style={{ animationDelay: '2s' }} />
+        <div className="absolute top-0 -left-1/4 w-1/2 h-1/2 bg-[#1D9E75]/5 blur-[120px] rounded-full animate-pulse" />
+        <div className="absolute bottom-0 -right-1/4 w-1/2 h-1/2 bg-[#1D9E75]/3 blur-[120px] rounded-full animate-pulse" style={{ animationDelay: '2s' }} />
       </div>
 
       <div className="relative z-10 p-4 md:p-8">
         <header className="max-w-7xl mx-auto flex justify-between items-center mb-12">
           <div className="flex items-center gap-12">
             <div className="flex items-center gap-3 group cursor-pointer" onClick={() => setCurrentStep('upload')}>
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center rotate-3 group-hover:rotate-12 transition-transform duration-300 shadow-lg shadow-blue-500/20">
-                <Zap className="w-7 h-7 text-white fill-white/20" />
+              <div className="w-12 h-12 bg-[#1D9E75] rounded-2xl flex items-center justify-center group-hover:scale-105 transition-transform duration-300 shadow-lg shadow-blue-500/20">
+                <Zap className="w-7 h-7 text-[#FFFFFF]" />
               </div>
               <div>
-                <h1 className="text-2xl font-black tracking-tighter bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent">
+                <h1 className="text-2xl font-black tracking-tighter text-[#111111]">
                   JobApplyAI
                 </h1>
                 <div className="flex items-center gap-2">
-                  <span className="h-1 w-1 rounded-full bg-blue-500 animate-ping" />
-                  <p className="text-[10px] font-bold text-white/40 tracking-[0.2em] uppercase">Autonomous Platform</p>
+                  <span className="h-1 w-1 rounded-full bg-[#1D9E75] animate-ping" />
+                  <p className="text-[10px] font-bold text-[#AAAAAA] tracking-[0.2em] uppercase">Autonomous Platform</p>
                 </div>
               </div>
             </div>
@@ -201,7 +201,7 @@ function App() {
                   setShowDashboard(false);
                   setCurrentStep('upload');
                 }}
-                className={`text-sm font-bold tracking-tight transition-all pb-1 border-b-2 ${!showDashboard ? 'text-blue-400 border-blue-500' : 'text-white/40 border-transparent hover:text-white/70'}`}
+                className={`text-sm font-bold tracking-tight transition-all pb-1 border-b-2 ${!showDashboard ? 'text-[#1D9E75] border-[#1D9E75]' : 'text-[#AAAAAA] border-transparent hover:text-[#111111]'}`}
               >
                 Job Search
               </button>
@@ -210,7 +210,7 @@ function App() {
                   if (!user) setShowAuthModal(true);
                   else setShowDashboard(true);
                 }}
-                className={`text-sm font-bold tracking-tight transition-all pb-1 border-b-2 ${showDashboard ? 'text-blue-400 border-blue-500' : 'text-white/40 border-transparent hover:text-white/70'}`}
+                className={`text-sm font-bold tracking-tight transition-all pb-1 border-b-2 ${showDashboard ? 'text-[#1D9E75] border-[#1D9E75]' : 'text-[#AAAAAA] border-transparent hover:text-[#111111]'}`}
               >
                 Dashboard
               </button>
@@ -224,29 +224,29 @@ function App() {
                   setShowDashboard(true);
                   setDashboardTab('inbox');
                 }}
-                className="relative p-2.5 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-all text-white/60 hover:text-blue-400 group"
+                className="relative p-2.5 bg-[#FFFFFF] border border-[#E0E0E0] rounded-[8px] hover:bg-[#F8F9FB] transition-all text-[#888888] hover:text-[#1D9E75] group"
               >
                 <Bell className="w-5 h-5" />
                 {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-black rounded-full flex items-center justify-center border-2 border-[#020617] group-hover:scale-110 transition-transform">
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-black rounded-full flex items-center justify-center border-2 border-[#FFFFFF] group-hover:scale-110 transition-transform">
                     {unreadCount}
                   </span>
                 )}
               </button>
             )}
             {user ? (
-              <div className="flex items-center gap-3 pl-3 pr-2 py-2 bg-white/5 border border-white/10 rounded-2xl">
+              <div className="flex items-center gap-3 pl-3 pr-2 py-2 bg-[#FFFFFF] border border-[#E0E0E0] rounded-[12px]">
                 <div className="text-right hidden sm:block">
-                  <p className="text-xs font-bold text-white/80">{getDisplayName(user)}</p>
-                  <p className="text-[10px] text-white/35 truncate max-w-[180px]">{user.email}</p>
-                  <p className="text-[9px] font-medium text-white/30 uppercase tracking-wider">Premium Member</p>
+                  <p className="text-xs font-bold text-[#444444]">{getDisplayName(user)}</p>
+                  <p className="text-[10px] text-[#AAAAAA] truncate max-w-[180px]">{user.email}</p>
+                  <p className="text-[9px] font-medium text-[#AAAAAA] uppercase tracking-wider">Premium Member</p>
                 </div>
-                <div className="w-8 h-8 bg-blue-500 rounded-xl flex items-center justify-center text-xs font-black shadow-lg shadow-blue-500/20 cursor-pointer" onClick={() => setShowDashboard(true)}>
+                <div className="w-8 h-8 bg-[#1D9E75] rounded-[8px] flex items-center justify-center text-xs font-black text-[#FFFFFF] shadow-lg shadow-[#1D9E75]/20 cursor-pointer" onClick={() => setShowDashboard(true)}>
                   {getDisplayName(user)[0]?.toUpperCase() || 'U'}
                 </div>
                 <button 
                   onClick={handleLogout}
-                  className="p-2 hover:bg-white/10 rounded-lg text-white/40 hover:text-red-400 transition-colors"
+                  className="p-2 hover:bg-[#E8E8E8] rounded-lg text-[#AAAAAA] hover:text-red-400 transition-colors"
                   title="Log Out"
                 >
                   <LogOut className="w-4 h-4" />
@@ -255,7 +255,7 @@ function App() {
             ) : (
               <button 
                 onClick={() => setShowAuthModal(true)}
-                className="px-6 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-sm font-bold tracking-tight transition-all"
+                className="px-6 py-2.5 bg-[#FFFFFF] hover:bg-[#F8F9FB] border border-[#E0E0E0] rounded-[8px] text-sm font-bold text-[#444444] tracking-tight transition-all"
               >
                 Sign In
               </button>
@@ -282,31 +282,31 @@ function App() {
                       }}
                       className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all w-full ${
                         isActive 
-                          ? 'bg-blue-500/20 border-2 border-blue-500 shadow-lg shadow-blue-500/10' 
+                          ? 'bg-[#E1F5EE] border-2 border-[#1D9E75] shadow-lg shadow-[#1D9E75]/10' 
                           : isCompleted 
-                          ? 'bg-green-500/10 border border-green-500/30 cursor-pointer hover:bg-green-500/20' 
-                          : 'bg-white/5 border border-white/10 opacity-40 cursor-not-allowed'
+                          ? 'bg-[#E1F5EE] border border-[#1D9E75]/30 cursor-pointer hover:bg-[#E1F5EE]' 
+                          : 'bg-[#F8F9FB] border border-[#E8E8E8] opacity-40 cursor-not-allowed'
                       }`}
                       whileHover={isCompleted || isActive ? { y: -2 } : {}}
                       whileTap={isCompleted || isActive ? { scale: 0.98 } : {}}
                     >
                       <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
                         isActive 
-                          ? 'bg-blue-500 shadow-lg shadow-blue-500/40' 
+                          ? 'bg-[#1D9E75] shadow-lg shadow-[#1D9E75]/30' 
                           : isCompleted 
-                          ? 'bg-green-500' 
-                          : 'bg-white/10'
+                          ? 'bg-[#1D9E75]' 
+                          : 'bg-[#E8E8E8]'
                       }`}>
                         {isCompleted ? <CheckCircle className="w-4 h-4" /> : <Icon className="w-4 h-4" />}
                       </div>
                       <div className="text-left hidden sm:block">
                         <div className="font-bold text-xs whitespace-nowrap">{step.label}</div>
-                        <div className="text-[10px] text-white/40 font-medium">0{index + 1}</div>
+                        <div className="text-[10px] text-[#AAAAAA] font-medium">0{index + 1}</div>
                       </div>
                     </motion.button>
                     {index < steps.length - 1 && (
                       <div className={`h-[1px] flex-1 mx-2 min-w-[20px] ${
-                        isCompleted ? 'bg-green-500/50' : 'bg-white/10'
+                        isCompleted ? 'bg-[#1D9E75]/50' : 'bg-[#E8E8E8]'
                       }`} />
                     )}
                   </div>
@@ -345,15 +345,15 @@ function App() {
                     onComplete={handleApplyComplete}
                   />
                 ) : (
-                  <div className="flex flex-col items-center justify-center py-20 bg-slate-900/50 border border-white/10 rounded-3xl p-12 text-center">
-                    <Lock className="w-16 h-16 text-blue-500 mb-6 mx-auto opacity-50" />
+                  <div className="flex flex-col items-center justify-center py-20 bg-[#FFFFFF] border border-[#E8E8E8] rounded-[12px] p-12 text-center">
+                    <Lock className="w-16 h-16 text-[#1D9E75] mb-6 mx-auto opacity-50" />
                     <h3 className="text-2xl font-black mb-3">Authentication Required</h3>
-                    <p className="text-white/40 max-w-sm mx-auto mb-8 font-medium">
+                    <p className="text-[#AAAAAA] max-w-sm mx-auto mb-8 font-medium">
                       To use our premium Auto-Apply feature and secure your career, please sign in to your JobApplyAI account.
                     </p>
                     <button 
                       onClick={() => setShowAuthModal(true)}
-                      className="px-12 py-4 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl shadow-blue-500/20"
+                      className="px-12 py-4 bg-[#1D9E75] rounded-[12px] font-black uppercase tracking-widest text-xs shadow-xl shadow-[#1D9E75]/20"
                     >
                       Log In to Apply
                     </button>
@@ -370,45 +370,86 @@ function App() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 z-[100] bg-[#020617]/95 backdrop-blur-2xl p-4 md:p-8 overflow-y-auto"
+                className="fixed inset-0 z-[100] bg-[#F8F9FB]/95 backdrop-blur-2xl p-4 md:p-8 overflow-y-auto"
               >
                 <div className="max-w-7xl mx-auto">
-                  <div className="flex justify-between items-center mb-12">
-                    <div className="flex gap-4">
+                  <div className="mb-10">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="px-3 py-1 bg-[#1D9E75]/10 rounded-full text-[10px] font-black text-[#1D9E75] uppercase tracking-widest">
+                        Career Command Center
+                      </div>
+                    </div>
+                    <h2 className="text-4xl font-black tracking-tighter text-[#111111] mb-4">Recruitment Pipeline</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      <div className="flex items-center gap-4 group">
+                        <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm border border-gray-100 group-hover:scale-110 transition-transform">
+                          <Bell className="w-5 h-5 text-blue-500" />
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Outreach</p>
+                          <p className="text-xs font-bold text-[#111111]">Recruiter Inbox</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-4 group">
+                        <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm border border-gray-100 group-hover:scale-110 transition-transform">
+                          <Calendar className="w-5 h-5 text-purple-500" />
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Scheduling</p>
+                          <p className="text-xs font-bold text-[#111111]">Interview Tracker</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-4 group">
+                        <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm border border-gray-100 group-hover:scale-110 transition-transform">
+                          <Target className="w-5 h-5 text-emerald-500" />
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Monitoring</p>
+                          <p className="text-xs font-bold text-[#111111]">App Tracking</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-between items-center mb-8">
+                    <div className="flex gap-2 p-1.5 bg-white border border-[#E8E8E8] rounded-[18px] shadow-sm">
                       <button 
                         onClick={() => setDashboardTab('inbox')}
-                        className={`px-8 py-3 rounded-2xl text-sm font-black uppercase tracking-widest transition-all ${
+                        className={`flex items-center gap-2 px-6 py-3 rounded-[12px] text-[10px] font-black uppercase tracking-widest transition-all ${
                           dashboardTab === 'inbox' 
-                            ? 'bg-blue-500 text-white shadow-xl shadow-blue-500/20' 
-                            : 'bg-white/5 border border-white/10 text-white/40 hover:text-white'
+                            ? 'bg-[#1D9E75] text-[#FFFFFF] shadow-lg shadow-[#1D9E75]/20' 
+                            : 'text-[#AAAAAA] hover:text-[#111111] hover:bg-[#F8F9FB]'
                         }`}
                       >
+                        <Bell className="w-3.5 h-3.5" />
                         Recruiter Inbox {unreadCount > 0 && `(${unreadCount})`}
                       </button>
                       <button 
                         onClick={() => setDashboardTab('tracker')}
-                        className={`px-8 py-3 rounded-2xl text-sm font-black uppercase tracking-widest transition-all ${
+                        className={`flex items-center gap-2 px-6 py-3 rounded-[12px] text-[10px] font-black uppercase tracking-widest transition-all ${
                           dashboardTab === 'tracker' 
-                            ? 'bg-blue-500 text-white shadow-xl shadow-blue-500/20' 
-                            : 'bg-white/5 border border-white/10 text-white/40 hover:text-white'
+                            ? 'bg-[#1D9E75] text-[#FFFFFF] shadow-lg shadow-[#1D9E75]/20' 
+                            : 'text-[#AAAAAA] hover:text-[#111111] hover:bg-[#F8F9FB]'
                         }`}
                       >
+                        <Calendar className="w-3.5 h-3.5" />
                         Interview Tracker
                       </button>
                       <button 
                         onClick={() => setDashboardTab('history')}
-                        className={`px-8 py-3 rounded-2xl text-sm font-black uppercase tracking-widest transition-all ${
+                        className={`flex items-center gap-2 px-6 py-3 rounded-[12px] text-[10px] font-black uppercase tracking-widest transition-all ${
                           dashboardTab === 'history' 
-                            ? 'bg-blue-500 text-white shadow-xl shadow-blue-500/20' 
-                            : 'bg-white/5 border border-white/10 text-white/40 hover:text-white'
+                            ? 'bg-[#1D9E75] text-[#FFFFFF] shadow-lg shadow-[#1D9E75]/20' 
+                            : 'text-[#AAAAAA] hover:text-[#111111] hover:bg-[#F8F9FB]'
                         }`}
                       >
+                        <Target className="w-3.5 h-3.5" />
                         App Tracking
                       </button>
                     </div>
                     <button 
                       onClick={() => setShowDashboard(false)}
-                      className="p-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl transition-all hover:scale-110 active:scale-95"
+                      className="p-3 bg-[#FFFFFF] hover:bg-[#F8F9FB] border border-[#E8E8E8] rounded-[12px] transition-all hover:scale-110 active:scale-95"
                     >
                       <X className="w-6 h-6" />
                     </button>

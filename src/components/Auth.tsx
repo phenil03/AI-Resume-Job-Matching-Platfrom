@@ -155,7 +155,7 @@ export default function Auth({ onSuccess, onCancel }: AuthProps) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="absolute inset-0 bg-slate-950/90 backdrop-blur-2xl"
+        className="absolute inset-0 bg-black/40 backdrop-blur-2xl"
         onClick={onCancel}
       />
 
@@ -163,58 +163,58 @@ export default function Auth({ onSuccess, onCancel }: AuthProps) {
         initial={{ opacity: 0, scale: 0.92, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.92, y: 20 }}
-        className="relative w-full max-w-md overflow-hidden rounded-[2.5rem] border border-white/10 bg-slate-900 p-10 text-white shadow-2xl"
+        className="relative w-full max-w-md overflow-hidden rounded-[2.5rem] border border-[#E8E8E8] bg-[#FFFFFF] p-10 text-[#111111] shadow-2xl"
       >
-        <div className="absolute top-0 left-0 h-1 w-full bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500" />
+        <div className="absolute top-0 left-0 h-1 w-full bg-gradient-to-r from-[#1D9E75] via-indigo-500 to-purple-500" />
 
         <AnimatePresence mode="wait">
           {googleStep === 1 ? (
             <motion.div key="g1" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="py-10 text-center">
-              <div className="mx-auto mb-8 flex h-20 w-20 items-center justify-center rounded-2xl border border-blue-500/30 bg-blue-500/10">
-                <Loader2 className="h-10 w-10 animate-spin text-blue-400" />
+              <div className="mx-auto mb-8 flex h-20 w-20 items-center justify-center rounded-[12px] border border-[#1D9E75]/30 bg-[#E6F1FB]">
+                <Loader2 className="h-10 w-10 animate-spin text-[#1D9E75]" />
               </div>
               <h3 className="mb-1 text-xl font-bold">Redirecting to Google...</h3>
-              <p className="text-xs text-white/30">Google will show the original sign-in screen.</p>
+              <p className="text-xs text-[#AAAAAA]">Google will show the original sign-in screen.</p>
             </motion.div>
           ) : googleStep === 2 ? (
             <motion.div key="g2" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="py-10 text-center">
-              <div className="mx-auto mb-8 flex h-20 w-20 items-center justify-center rounded-2xl border border-emerald-500/30 bg-emerald-500/20">
+              <div className="mx-auto mb-8 flex h-20 w-20 items-center justify-center rounded-[12px] border border-emerald-500/30 bg-emerald-500/20">
                 <CheckCircle className="h-10 w-10 text-emerald-500" />
               </div>
               <h3 className="mb-1 text-2xl font-black">Verified</h3>
-              <p className="text-xs font-bold uppercase tracking-widest text-white/30">Profile Synchronized</p>
+              <p className="text-xs font-bold uppercase tracking-widest text-[#AAAAAA]">Profile Synchronized</p>
             </motion.div>
           ) : (
             <motion.div key="main">
               <div className="mb-8 text-center">
-                <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-blue-500/20 bg-blue-500/10 px-3 py-1">
-                  <Lock className="h-3 w-3 text-blue-400" />
-                  <span className="text-[9px] font-black uppercase tracking-widest text-blue-400">Secure Portal</span>
+                <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-[#1D9E75]/20 bg-[#E6F1FB] px-3 py-1">
+                  <Lock className="h-3 w-3 text-[#1D9E75]" />
+                  <span className="text-[9px] font-black uppercase tracking-widest text-[#1D9E75]">Secure Portal</span>
                 </div>
                 <h3 className="mb-2 text-4xl font-black tracking-tighter">
                   {isLogin ? 'Login' : 'Sign Up'}
                 </h3>
-                <p className="text-sm font-medium text-white/30">Empower your career with AI automation.</p>
+                <p className="text-sm font-medium text-[#AAAAAA]">Empower your career with AI automation.</p>
               </div>
 
               <div className="space-y-4">
                 <button
                   onClick={handleGoogleSignIn}
                   disabled={loading}
-                  className="flex h-14 w-full items-center justify-center gap-4 rounded-2xl bg-white shadow-xl shadow-white/5 transition-all hover:bg-slate-50 active:scale-[0.98] disabled:opacity-50"
+                  className="flex h-14 w-full items-center justify-center gap-4 rounded-[12px] bg-white shadow-xl shadow-white/5 transition-all hover:bg-slate-50 active:scale-[0.98] disabled:opacity-50"
                 >
                   <GoogleMark />
                   <span className="text-sm font-semibold text-slate-900">Sign in with Google</span>
                 </button>
 
-                <div className="flex items-center gap-4 py-2 opacity-10">
-                  <div className="h-px flex-1 bg-white" />
-                  <span className="text-[10px] font-black uppercase tracking-widest text-white">OR</span>
-                  <div className="h-px flex-1 bg-white" />
+                <div className="flex items-center gap-4 py-2 opacity-20">
+                  <div className="h-px flex-1 bg-[#111111]" />
+                  <span className="text-[10px] font-black uppercase tracking-widest text-[#111111]">OR</span>
+                  <div className="h-px flex-1 bg-[#111111]" />
                 </div>
 
                 {error && (
-                  <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-center text-xs font-bold text-red-400">
+                  <div className="rounded-[12px] border border-transparent bg-[#FCEBEB] p-4 text-center text-xs font-bold text-[#791F1F]">
                     {error}
                   </div>
                 )}
@@ -224,7 +224,7 @@ export default function Auth({ onSuccess, onCancel }: AuthProps) {
                     <input
                       type="text"
                       placeholder="NAME"
-                      className="h-14 w-full rounded-2xl border border-white/5 bg-white/5 px-6 text-xs font-bold uppercase tracking-widest text-white placeholder:text-white/20 outline-none transition-all focus:border-blue-500/50"
+                      className="h-14 w-full rounded-[12px] border border-[#E0E0E0] bg-[#FFFFFF] px-6 text-xs font-bold uppercase tracking-widest text-[#111111] placeholder:text-[#AAAAAA] outline-none transition-all focus:border-[#1D9E75]/50"
                       required
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -234,7 +234,7 @@ export default function Auth({ onSuccess, onCancel }: AuthProps) {
                   <input
                     type="email"
                     placeholder="EMAIL"
-                    className="h-14 w-full rounded-2xl border border-white/5 bg-white/5 px-6 text-xs font-bold uppercase tracking-widest text-white placeholder:text-white/20 outline-none transition-all focus:border-blue-500/50"
+                    className="h-14 w-full rounded-[12px] border border-[#E0E0E0] bg-[#FFFFFF] px-6 text-xs font-bold uppercase tracking-widest text-[#111111] placeholder:text-[#AAAAAA] outline-none transition-all focus:border-[#1D9E75]/50"
                     required
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
@@ -243,7 +243,7 @@ export default function Auth({ onSuccess, onCancel }: AuthProps) {
                   <input
                     type="password"
                     placeholder="PASSWORD"
-                    className="h-14 w-full rounded-2xl border border-white/5 bg-white/5 px-6 text-xs font-bold uppercase tracking-widest text-white placeholder:text-white/20 outline-none transition-all focus:border-blue-500/50"
+                    className="h-14 w-full rounded-[12px] border border-[#E0E0E0] bg-[#FFFFFF] px-6 text-xs font-bold uppercase tracking-widest text-[#111111] placeholder:text-[#AAAAAA] outline-none transition-all focus:border-[#1D9E75]/50"
                     required
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
@@ -252,7 +252,7 @@ export default function Auth({ onSuccess, onCancel }: AuthProps) {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="mt-4 flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-600 text-xs font-black uppercase tracking-widest text-white transition-all active:scale-[0.98] disabled:opacity-50"
+                    className="mt-4 flex h-14 w-full items-center justify-center gap-2 rounded-[12px] bg-[#1D9E75] text-xs font-black uppercase tracking-widest text-[#FFFFFF] transition-all active:scale-[0.98] disabled:opacity-50"
                   >
                     {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <span>Proceed to Vault</span>}
                   </button>
@@ -261,7 +261,7 @@ export default function Auth({ onSuccess, onCancel }: AuthProps) {
                 <div className="pt-6 text-center">
                   <button
                     onClick={() => setIsLogin(!isLogin)}
-                    className="text-[10px] font-black uppercase tracking-[0.2em] text-white/20 transition-colors hover:text-white"
+                    className="text-[10px] font-black uppercase tracking-[0.2em] text-[#AAAAAA] transition-colors hover:text-[#111111]"
                   >
                     {isLogin ? 'Need a profile? Sign Up' : 'Returning? Log In'}
                   </button>

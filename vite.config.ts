@@ -78,7 +78,7 @@ const DOMAINS = {
     ]
   },
   cybersecurity: {
-    detect: ['cybersecurity', 'security analyst', 'penetration testing', 'ethical hacking', 'soc analyst', 'network security', 'infosec', 'security engineer'],
+    detect: ['cybersecurity', 'security analyst', 'penetration testing', 'ethical hacking', 'soc analyst', 'network security', 'infosec', 'security engineer', 'vulnerability', 'firewall', 'security', 'hacking'],
     skills: [
       'Penetration Testing', 'Ethical Hacking', 'SIEM', 'Firewalls', 'Network Security', 
       'Vulnerability Assessment', 'Linux', 'Kali Linux', 'OWASP', 'Cryptography', 'IAM', 
@@ -149,7 +149,7 @@ const DOMAIN_ANCHORS: Record<string, string[]> = {
   design: ['designer', 'ui', 'ux', 'product design', 'figma'],
   database: ['database', 'data engineer', 'sql', 'dba'],
   mobile: ['mobile', 'android', 'ios', 'flutter', 'react native'],
-  cybersecurity: ['security', 'cybersecurity', 'infosec', 'soc', 'penetration']
+  cybersecurity: ['security', 'cybersecurity', 'infosec', 'soc', 'penetration', 'ethical hacking', 'security engineer', 'vulnerability assessment']
 };
 
 const EXCLUDED_TITLE_PATTERNS = [
@@ -165,11 +165,55 @@ const EXCLUDED_TITLE_PATTERNS = [
   /\bnurse\b/i
 ];
 
-function detectDomain(lowerContent: string) {
+function detectDomain(lowerContent: string, sections?: Record<string, string>) {
   const scores: Record<string, number> = {};
+  
+  const specializationMultiplier: Record<string, number> = {
+    cybersecurity: 6.0,    // Extreme weight for specialized security roles
+    devops: 3.5,           // Infrastructure core
+    data_science: 3.0,     // Mathematical core
+    data_analyst: 2.5,
+    mobile: 2.2,
+    design: 2.0,
+    database: 1.8,
+    backend: 1.5,
+    frontend: 1.0,
+    fullstack: 0.8         // Fullstack is often a fallback, give it lower priority than specialists
+  };
+
+  const DOMAIN_ANCHORS: Record<string, string[]> = {
+    cybersecurity: ['SOC', 'SIEM', 'CISSP', 'CEH', 'Penetration Testing', 'Firewall', 'Zero Trust', 'NIST', 'ISO 27001', 'Vulnerability', 'Ethical Hacking'],
+    devops: ['Kubernetes', 'Docker', 'Terraform', 'CI/CD', 'AWS', 'Azure', 'Jenkins', 'Ansible', 'Infrastructure as Code', 'SRE'],
+    data_science: ['Machine Learning', 'AI', 'Python', 'TensorFlow', 'PyTorch', 'Statistics', 'NLP', 'Computer Vision', 'Data Model'],
+    frontend: ['React', 'Vue', 'Angular', 'Tailwind', 'CSS', 'HTML', 'Frontend', 'User Interface'],
+    mobile: ['Swift', 'Kotlin', 'React Native', 'Flutter', 'Android', 'iOS', 'Mobile App'],
+    design: ['Figma', 'Adobe XD', 'UI/UX', 'Prototyping', 'User Research', 'Design System']
+  };
+
+  const experienceText = (sections?.experience || '').toLowerCase();
+  const summaryText = (sections?.summary || '').toLowerCase();
+
   for (const [domain, config] of Object.entries(DOMAINS)) {
-    scores[domain] = config.detect.filter(word => matchesSkill(lowerContent, word)).length;
+    // 1. Basic detection hits in whole content
+    let score = config.detect.filter(word => matchesSkill(lowerContent, word)).length;
+    
+    // 2. Anchor hits (Extremely strong signals)
+    const anchors = DOMAIN_ANCHORS[domain] || [];
+    const anchorHits = anchors.filter(anchor => matchesSkill(lowerContent, anchor)).length;
+    score += anchorHits * 10; // Massive anchor weight
+
+    // 3. Section-specific weighting (Experience & Summary define the "Core")
+    if (sections) {
+      const expHits = config.detect.filter(word => matchesSkill(experienceText, word)).length;
+      const summaryHits = config.detect.filter(word => matchesSkill(summaryText, word)).length;
+      score += expHits * 5; // Work experience is the strongest signal of "Core Domain"
+      score += summaryHits * 4; // Summary/Objective is the second strongest
+    }
+
+    // 4. Apply specialization multiplier
+    scores[domain] = score * (specializationMultiplier[domain] || 1.0);
   }
+
   const sorted = Object.entries(scores).sort((a, b) => b[1] - a[1]);
   return sorted[0][1] > 0 ? sorted[0][0] : 'fullstack';
 }
@@ -465,12 +509,13 @@ function rankStrictJob(job: { title?: string; description?: string; location?: s
   return Math.min(100, score);
 }
 
-function analyzeMockResume(content: string, jobDescription = '') {
+function analyzeMockResume(content: string, jobDescription = '', domainOverride?: string) {
   const normalizedContent = normalizeAtsText(content || '');
   const normalizedJobDescription = normalizeAtsText(jobDescription || '');
-  const primaryDomain = detectDomain(`${normalizedJobDescription}\n${normalizedContent}`.toLowerCase());
-  const domainSkills = DOMAINS[primaryDomain as keyof typeof DOMAINS].skills || [];
   const sectionMap = getAtsSectionsMap(normalizedContent);
+  const primaryDomain = (domainOverride && DOMAINS[domainOverride as keyof typeof DOMAINS]) 
+    ? domainOverride 
+    : detectDomain(`${normalizedJobDescription}\n${normalizedContent}`.toLowerCase(), sectionMap);
   const estimatedYears = estimateResumeYearsForAts(normalizedContent);
   const requiredYears = extractRequiredYearsForAts(normalizedJobDescription);
   const seniority = determineAtsSeniority({
@@ -508,6 +553,7 @@ function analyzeMockResume(content: string, jobDescription = '') {
   const foundSections = sectionChecks.filter(([, regex]) => regex.test(normalizedContent)).map(([label]) => label);
   const missingSections = sectionChecks.filter(([, regex]) => !regex.test(normalizedContent)).map(([label]) => label);
 
+  const domainSkills = DOMAINS[primaryDomain as keyof typeof DOMAINS]?.skills || [];
   const targetKeywords = getJobKeywordsForAts(normalizedJobDescription, domainSkills);
   const hardKeywords = [...new Set(targetKeywords.filter(keyword => domainSkills.includes(keyword) || /[A-Z0-9./+#-]/.test(keyword) || keyword.length <= 5))];
   const softKeywords = [...new Set([
@@ -1131,7 +1177,8 @@ const mockApiPlugin = () => ({
             const resume = mockDb.resumes.find((r: any) => String(r.id) === String(resumeId)) || mockDb.resumes[0];
             const content = resume?.content || '';
 
-            return res.end(JSON.stringify(analyzeMockResume(content, jobDescription)));
+            const domainOverride = typeof payload.domain_override === 'string' ? payload.domain_override : undefined;
+            return res.end(JSON.stringify(analyzeMockResume(content, jobDescription, domainOverride)));
           }
 
           if (path === '/api/fetch-real-jobs' && req.method === 'POST') {
@@ -1158,12 +1205,14 @@ const mockApiPlugin = () => ({
                 description: job.description,
                 source: job.source,
                 job_type: job.job_type,
-                match_score: rankStrictJob(
-                  job,
-                  foundSkills.length > 0 ? foundSkills.slice(0, 6) : searchSkills.slice(0, 6),
-                  searchSkills.slice(0, 6),
-                  roleHints
-                )
+                match_score: isPortalSearchLink(job)
+                  ? Math.min(99, 91 + (job.portal.charCodeAt(0) % 7) + (job.portal.length % 3)) 
+                  : rankStrictJob(
+                      job,
+                      foundSkills.length > 0 ? foundSkills.slice(0, 6) : searchSkills.slice(0, 6),
+                      searchSkills.slice(0, 6),
+                      roleHints
+                    )
               }))
               .filter((job: any) => job.portal?.endsWith('_search') || job.match_score >= 45)
               .sort((a: any, b: any) => b.match_score - a.match_score)
@@ -1176,35 +1225,6 @@ const mockApiPlugin = () => ({
             return res.end(JSON.stringify({ jobs: scoredJobs, count: scoredJobs.length, live_job_count: liveJobCount, search_link_count: searchLinkCount }));
           }
 
-          // Job Fetching Mock (FIXED: USES DETECTED DOMAIN)
-          if (path === '/api/fetch-real-jobs' && req.method === 'POST') {
-             const resumeId = payload.resume_id;
-             const resume = mockDb.resumes.find((r: any) => String(r.id) === String(resumeId)) || mockDb.resumes[0];
-             const content = resume?.content || '';
-             const domain = detectDomain(content);
-             
-             const domainTitles: Record<string, string> = {
-               design: 'UI UX Designer',
-               frontend: 'Frontend Developer',
-               backend: 'Backend Engineer',
-               devops: 'DevOps Engineer',
-               cybersecurity: 'Security Analyst',
-               data_science: 'Data Scientist',
-               data_analyst: 'Data Analyst',
-               mobile: 'Mobile Developer'
-             };
-             const searchTerms = domainTitles[domain] || 'Software Engineer';
-
-             const jobs = [
-               { id: 1, job_title: `${searchTerms} at Google`, company: 'Google', location: 'Mountain View, CA (Remote)', salary: '$180k - $240k', portal: 'adzuna_us', job_url: '#', match_score: 95 },
-               { id: 2, job_title: `Lead ${searchTerms}`, company: 'Meta', location: 'London, UK', salary: '£120k+', portal: 'adzuna_gb', job_url: '#', match_score: 92 },
-               { id: 3, job_title: `Remote ${searchTerms}`, company: 'Stripe', location: 'Worldwide Remote', salary: '$160k+', portal: 'remoteok', job_url: '#', match_score: 88 },
-               { id: 4, job_title: `${searchTerms} (Remote)`, company: 'Spotify', location: 'Stockholm / Remote', salary: 'Competitive', portal: 'adzuna_gb', job_url: '#', match_score: 85 }
-             ];
-
-             mockDb.matches = jobs;
-             return res.end(JSON.stringify({ jobs, count: jobs.length }));
-          }
 
           if ((path === '/api/auto-apply' || path === '/api/auto-apply-real') && req.method === 'POST') {
             const selectedIds = Array.isArray(payload.job_match_ids) ? payload.job_match_ids : [];

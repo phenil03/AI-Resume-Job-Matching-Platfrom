@@ -95,24 +95,24 @@ export default function JobMatches({ resumeId, atsScore, onComplete }: Props) {
       case 'adzuna_in':
       case 'adzuna_us':
       case 'adzuna_gb':
-        return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
+        return 'bg-[#F8F9FB] text-[#1D9E75] border-[#1D9E75]/30';
       case 'remoteok':
-        return 'bg-green-500/20 text-green-400 border-green-500/30';
+        return 'bg-[#1D9E75]/20 text-[#085041] border-[#1D9E75]/30';
       case 'arbeitnow':
-        return 'bg-purple-500/20 text-purple-400 border-purple-500/30';
+        return 'bg-purple-50 text-purple-700 border-purple-300';
       case 'remotive':
-        return 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30';
+        return 'bg-[#E6F1FB] text-[#1D9E75] border-cyan-500/30';
       case 'naukri':
       case 'naukri_search':
-        return 'bg-blue-600/20 text-blue-400 border-blue-600/30';
+        return 'bg-[#1D9E75]/20 text-[#1D9E75] border-blue-600/30';
       case 'linkedin_search':
-        return 'bg-sky-600/20 text-sky-300 border-sky-500/30';
+        return 'bg-[#E6F1FB] text-[#0C447C] border-[#0C447C]/30';
       case 'indeed_search':
-        return 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30';
+        return 'bg-indigo-50 text-indigo-700 border-indigo-300';
       case 'company_website':
-        return 'bg-orange-500/20 text-orange-400 border-orange-500/30';
+        return 'bg-orange-50 text-orange-700 border-orange-300';
       default:
-        return 'bg-white/10 text-white/70 border-white/20';
+        return 'bg-[#FFFFFF] text-[#444444] border-[#E0E0E0]';
     }
   };
 
@@ -162,37 +162,37 @@ export default function JobMatches({ resumeId, atsScore, onComplete }: Props) {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8"
+        className="bg-[#FFFFFF] backdrop-blur-sm border border-[#E8E8E8] rounded-[12px] p-8"
       >
         <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold mb-3 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+          <h2 className="text-3xl font-bold mb-3 text-[#111111] ">
             Real Jobs in India & Global
           </h2>
           <div className="flex items-center justify-center gap-2 mb-4">
-            <span className="px-3 py-1 bg-green-500/20 text-green-400 border border-green-500/30 rounded-full text-[10px] font-bold uppercase tracking-wider">Region: India</span>
-            <span className="px-3 py-1 bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded-full text-[10px] font-bold uppercase tracking-wider">Sources: Internet APIs</span>
+            <span className="px-3 py-1 bg-[#1D9E75]/20 text-[#085041] border border-[#1D9E75]/30 rounded-full text-[10px] font-bold uppercase tracking-wider">Region: India</span>
+            <span className="px-3 py-1 bg-[#F8F9FB] text-[#1D9E75] border border-[#1D9E75]/30 rounded-full text-[10px] font-bold uppercase tracking-wider">Sources: Internet APIs</span>
           </div>
-          <p className="text-white/70">Strictly ranked India-first jobs plus direct LinkedIn, Indeed, and Naukri search links</p>
+          <p className="text-[#444444]">Strictly ranked India-first jobs plus direct LinkedIn, Indeed, and Naukri search links</p>
           {fetchStatus && (
-            <p className="text-sm text-green-400 mt-2">{fetchStatus}</p>
+            <p className="text-sm text-[#085041] mt-2">{fetchStatus}</p>
           )}
         </div>
 
         {loading ? (
           <div className="text-center py-16">
-            <Loader2 className="w-12 h-12 mx-auto mb-4 animate-spin text-blue-400" />
-            <p className="text-white/70">Searching real job portals...</p>
-            <p className="text-sm text-white/50 mt-2">Fetching from live APIs and preparing search links for LinkedIn, Indeed, and Naukri...</p>
+            <Loader2 className="w-12 h-12 mx-auto mb-4 animate-spin text-[#1D9E75]" />
+            <p className="text-[#444444]">Searching real job portals...</p>
+            <p className="text-sm text-[#888888] mt-2">Fetching from live APIs and preparing search links for LinkedIn, Indeed, and Naukri...</p>
           </div>
         ) : matches.length === 0 ? (
           <div className="text-center py-16">
-            <Globe className="w-16 h-16 mx-auto mb-4 text-white/20" />
-            <p className="text-white/60">No jobs found. Try uploading a different resume.</p>
+            <Globe className="w-16 h-16 mx-auto mb-4 text-[#AAAAAA]" />
+            <p className="text-[#888888]">No jobs found. Try uploading a different resume.</p>
           </div>
         ) : (
           <div className="space-y-6">
-            <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4 mb-6">
-              <p className="text-green-300 text-sm text-center">
+            <div className="bg-[#E1F5EE] border border-[#1D9E75]/30 rounded-[12px] p-4 mb-6">
+              <p className="text-[#085041] text-sm text-center">
                 {liveMatchCount > 0
                   ? `Found ${liveMatchCount} live portal results${searchLinkCount > 0 ? ` plus ${searchLinkCount} search links` : ''}`
                   : `Showing ${searchLinkCount} direct search links because no live portal results matched yet`}
@@ -206,7 +206,7 @@ export default function JobMatches({ resumeId, atsScore, onComplete }: Props) {
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: i * 0.1 }}
-                  className="bg-white/5 border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-all group"
+                  className="bg-[#FFFFFF] border border-[#E8E8E8] rounded-[12px] p-6 hover:bg-[#FFFFFF] transition-all group"
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1">
@@ -217,14 +217,14 @@ export default function JobMatches({ resumeId, atsScore, onComplete }: Props) {
                         </span>
                         <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-tighter border ${
                           job.job_type === 'Remote'
-                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
-                            : 'bg-sky-500/10 text-sky-400 border-sky-500/30'
+                            ? 'bg-[#E1F5EE] text-[#085041] border-[#1D9E75]/30'
+                            : 'bg-[#E6F1FB] text-[#0C447C] border-[#0C447C]/30'
                         }`}>
                           {job.job_type || 'On-site'}
                         </span>
                       </div>
 
-                      <div className="flex items-center gap-6 text-sm text-white/70 mb-3">
+                      <div className="flex items-center gap-6 text-sm text-[#444444] mb-3">
                         <div className="flex items-center gap-2">
                           <Briefcase className="w-4 h-4" />
                           {job.company}
@@ -244,7 +244,7 @@ export default function JobMatches({ resumeId, atsScore, onComplete }: Props) {
                       </div>
 
                       {job.description && (
-                        <p className="text-xs text-white/60 mb-3 line-clamp-2">{cleanJobDescription(job.description)}</p>
+                        <p className="text-xs text-[#888888] mb-3 line-clamp-2">{cleanJobDescription(job.description)}</p>
                       )}
 
                       <div className="flex items-center gap-4 mb-3">
@@ -252,41 +252,50 @@ export default function JobMatches({ resumeId, atsScore, onComplete }: Props) {
                           href={job.job_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300 transition-colors"
+                          className="inline-flex items-center gap-1 text-xs text-[#1D9E75] hover:text-[#1D9E75] transition-colors"
                         >
                           <ExternalLink className="w-3 h-3" />
                           View on {job.source || getPortalLabel(job.portal)}
                         </a>
                       </div>
 
-                      <div className="flex items-center gap-2">
-                        <div className="flex-1 bg-white/10 rounded-full h-2 overflow-hidden">
+                      <div className="flex items-center gap-3">
+                        <div className="flex-1 bg-[#F0F0F0] rounded-full h-2.5 overflow-hidden shadow-inner">
                           <motion.div
                             initial={{ width: 0 }}
                             animate={{ width: `${job.match_score}%` }}
-                            transition={{ delay: i * 0.1 + 0.3, duration: 0.8 }}
-                            className={`h-full ${
-                              job.match_score >= 80 ? 'bg-green-500' :
-                              job.match_score >= 60 ? 'bg-yellow-500' :
-                              'bg-blue-500'
+                            transition={{ delay: i * 0.1 + 0.3, duration: 1, ease: "circOut" }}
+                            className={`h-full relative ${
+                              job.match_score >= 80 ? 'bg-gradient-to-r from-[#1D9E75] to-[#10B981]' :
+                              job.match_score >= 60 ? 'bg-gradient-to-r from-yellow-400 to-yellow-500' :
+                              'bg-gradient-to-r from-[#1D9E75]/60 to-[#1D9E75]'
                             }`}
-                          />
+                          >
+                            <div className="absolute inset-0 bg-white/20 animate-[shimmer_2s_infinite]" />
+                          </motion.div>
                         </div>
-                        <span className="text-sm font-semibold text-white/90 w-12 text-right">
-                          {job.match_score}%
-                        </span>
                       </div>
+
                     </div>
 
-                    <div className="flex flex-col items-end gap-2">
-                      <div className={`w-16 h-16 rounded-xl flex items-center justify-center ${
-                        job.match_score >= 80 ? 'bg-green-500/20 border-2 border-green-500' :
-                        job.match_score >= 60 ? 'bg-yellow-500/20 border-2 border-yellow-500' :
-                        'bg-blue-500/20 border-2 border-blue-500'
+                    <div className="flex flex-col items-end justify-between">
+                      <div className={`w-20 h-20 rounded-[20px] flex flex-col items-center justify-center transition-all duration-500 ${
+                        job.match_score >= 80 ? 'bg-[#1D9E75] text-white shadow-lg shadow-[#1D9E75]/30 scale-110' :
+                        job.match_score >= 60 ? 'bg-yellow-500/10 text-yellow-600 border border-yellow-200' :
+                        'bg-[#F8F9FB] text-[#888888] border border-[#E8E8E8]'
                       }`}>
-                        <TrendingUp className="w-8 h-8" />
+                        <span className="text-2xl font-black">{job.match_score}%</span>
+                        <span className="text-[8px] font-bold uppercase tracking-widest">Match</span>
                       </div>
+                      
+                      <motion.div 
+                        whileHover={{ x: 5 }}
+                        className="p-2 bg-[#F8F9FB] rounded-full text-[#1D9E75] border border-[#E8E8E8] group-hover:bg-[#1D9E75] group-hover:text-white transition-colors"
+                      >
+                        <ArrowRight className="w-5 h-5" />
+                      </motion.div>
                     </div>
+
                   </div>
                 </motion.div>
               ))}
@@ -298,7 +307,7 @@ export default function JobMatches({ resumeId, atsScore, onComplete }: Props) {
               transition={{ delay: 0.5 }}
               onClick={canApplyByAts ? onComplete : undefined}
               disabled={!canApplyByAts}
-              className="w-full py-4 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl font-semibold text-lg flex items-center justify-center gap-2 hover:from-blue-600 hover:to-purple-700 transition-all disabled:cursor-not-allowed disabled:opacity-50"
+              className="w-full py-4 bg-[#1D9E75] rounded-[12px] font-semibold text-lg flex items-center justify-center gap-2 hover:bg-[#0F6E56] transition-all disabled:cursor-not-allowed disabled:opacity-50"
               whileHover={canApplyByAts ? { scale: 1.02 } : {}}
               whileTap={canApplyByAts ? { scale: 0.98 } : {}}
             >
@@ -306,7 +315,7 @@ export default function JobMatches({ resumeId, atsScore, onComplete }: Props) {
               <ArrowRight className="w-5 h-5" />
             </motion.button>
             {!canApplyByAts && (
-              <p className="text-center text-sm text-amber-300/90">
+              <p className="text-center text-sm text-[#633806]">
                 Your ATS score is {atsScore ?? 0}. Reach at least 50 in ATS Analysis to unlock job applications.
               </p>
             )}

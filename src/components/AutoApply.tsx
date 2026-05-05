@@ -120,35 +120,35 @@ export default function AutoApply({ resumeId, atsScore, onComplete }: Props) {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8"
+        className="bg-[#FFFFFF] backdrop-blur-sm border border-[#E8E8E8] rounded-[12px] p-8"
       >
         <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold mb-3 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+          <h2 className="text-3xl font-bold mb-3 text-[#111111] ">
             Auto-Apply to Jobs
           </h2>
-          <p className="text-white/70">Select jobs to automatically apply with your resume</p>
+          <p className="text-[#444444]">Select jobs to automatically apply with your resume</p>
         </div>
 
         {!canApplyByAts ? (
-          <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-5 text-center">
-            <p className="text-lg font-semibold text-amber-200">ATS score 50+ is required to apply</p>
-            <p className="mt-2 text-sm text-amber-100/80">
+          <div className="rounded-[12px] border border-amber-500/30 bg-amber-500/10 p-5 text-center">
+            <p className="text-lg font-semibold text-[#633806]">ATS score 50+ is required to apply</p>
+            <p className="mt-2 text-sm text-[#633806]">
               Your current ATS score is {atsScore ?? 0}. Improve the resume in ATS Analysis, then come back to unlock job portal applications.
             </p>
           </div>
         ) : !applying && results.length === 0 ? (
           <div className="space-y-6">
             {applyError && (
-              <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 text-sm text-red-300">
+              <div className="bg-[#FCEBEB] border border-[#791F1F]/20 rounded-[12px] p-4 text-sm text-[#791F1F]">
                 {applyError}
               </div>
             )}
 
-            <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-4 flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
-              <div className="text-sm text-blue-300">
+            <div className="bg-[#E6F1FB] border border-[#1D9E75]/30 rounded-[12px] p-4 flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-[#1D9E75] flex-shrink-0 mt-0.5" />
+              <div className="text-sm text-[#1D9E75]">
                 <p className="font-semibold mb-1">Auto-Apply Features:</p>
-                <ul className="list-disc list-inside space-y-1 text-blue-300/80">
+                <ul className="list-disc list-inside space-y-1 text-[#888888]">
                   <li>Works on Naukri.com, Internshala, and custom company websites</li>
                   <li>Automatically fills application forms with your resume data</li>
                   <li>Handles multiple portals simultaneously</li>
@@ -160,7 +160,7 @@ export default function AutoApply({ resumeId, atsScore, onComplete }: Props) {
 
             <div className="space-y-3">
               {jobs.length === 0 && (
-                <div className="bg-white/5 border border-white/10 rounded-xl p-5 text-center text-white/60">
+                <div className="bg-[#FFFFFF] border border-[#E8E8E8] rounded-[12px] p-5 text-center text-[#888888]">
                   No eligible jobs found yet. Go back to Job Matches and fetch jobs first.
                 </div>
               )}
@@ -172,17 +172,17 @@ export default function AutoApply({ resumeId, atsScore, onComplete }: Props) {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: i * 0.05 }}
                   onClick={() => toggleJob(job.id)}
-                  className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                  className={`p-4 rounded-[12px] border-2 cursor-pointer transition-all ${
                     selectedJobs.includes(job.id)
-                      ? 'bg-blue-500/20 border-blue-500'
-                      : 'bg-white/5 border-white/10 hover:border-white/30'
+                      ? 'bg-[#F8F9FB] border-[#1D9E75]'
+                      : 'bg-[#FFFFFF] border-[#E8E8E8] hover:border-[#E0E0E0]'
                   }`}
                 >
                   <div className="flex items-center gap-4">
-                    <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center ${
+                    <div className={`w-6 h-6 rounded-[8px] border-2 flex items-center justify-center ${
                       selectedJobs.includes(job.id)
-                        ? 'bg-blue-500 border-blue-500'
-                        : 'border-white/30'
+                        ? 'bg-[#1D9E75] border-[#1D9E75]'
+                        : 'border-[#E0E0E0]'
                     }`}>
                       {selectedJobs.includes(job.id) && <CheckCircle className="w-4 h-4" />}
                     </div>
@@ -190,15 +190,15 @@ export default function AutoApply({ resumeId, atsScore, onComplete }: Props) {
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <h3 className="font-semibold">{job.job_title}</h3>
-                        <span className="text-xs text-white/60">at {job.company}</span>
+                        <span className="text-xs text-[#888888]">at {job.company}</span>
                       </div>
-                      <div className="flex items-center gap-3 text-xs text-white/60">
+                      <div className="flex items-center gap-3 text-xs text-[#888888]">
                         <div className="flex items-center gap-1">
                           {getPortalIcon(job.portal)}
                           <span>{job.portal}</span>
                         </div>
                         <span>•</span>
-                        <span className="text-green-400">{job.match_score}% match</span>
+                        <span className="text-[#085041]">{job.match_score}% match</span>
                       </div>
                     </div>
                   </div>
@@ -209,7 +209,7 @@ export default function AutoApply({ resumeId, atsScore, onComplete }: Props) {
             <motion.button
               onClick={handleAutoApply}
               disabled={selectedJobs.length === 0}
-              className="w-full py-4 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl font-semibold text-lg flex items-center justify-center gap-2 hover:from-blue-600 hover:to-purple-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-4 bg-[#1D9E75] rounded-[12px] font-semibold text-lg flex items-center justify-center gap-2 hover:bg-[#0F6E56] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               whileHover={selectedJobs.length > 0 ? { scale: 1.02 } : {}}
               whileTap={selectedJobs.length > 0 ? { scale: 0.98 } : {}}
             >
@@ -223,12 +223,12 @@ export default function AutoApply({ resumeId, atsScore, onComplete }: Props) {
               <motion.div
                 animate={{ rotate: 360 }}
                 transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
-                className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center"
+                className="w-20 h-20 mx-auto mb-4 bg-[#1D9E75] rounded-full flex items-center justify-center"
               >
                 <Zap className="w-10 h-10" />
               </motion.div>
               <h3 className="text-xl font-semibold mb-2">Applying to Jobs...</h3>
-              <p className="text-white/60">This may take a few moments</p>
+              <p className="text-[#888888]">This may take a few moments</p>
             </div>
 
             <div className="space-y-2">
@@ -238,9 +238,9 @@ export default function AutoApply({ resumeId, atsScore, onComplete }: Props) {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: i * 0.1 }}
-                  className="bg-white/5 border border-white/10 rounded-lg p-3 flex items-center gap-3"
+                  className="bg-[#FFFFFF] border border-[#E8E8E8] rounded-[8px] p-3 flex items-center gap-3"
                 >
-                  <Loader2 className="w-5 h-5 animate-spin text-blue-400" />
+                  <Loader2 className="w-5 h-5 animate-spin text-[#1D9E75]" />
                   <span className="text-sm">{job.job_title} at {job.company}</span>
                 </motion.div>
               ))}
@@ -250,7 +250,7 @@ export default function AutoApply({ resumeId, atsScore, onComplete }: Props) {
           <div className="space-y-6">
             <div className="text-center mb-6">
               <h3 className="text-2xl font-bold mb-2">Application Results</h3>
-              <p className="text-white/70">
+              <p className="text-[#444444]">
                 {results.filter(r => r.success).length} of {results.length} applications successful
               </p>
             </div>
@@ -264,24 +264,24 @@ export default function AutoApply({ resumeId, atsScore, onComplete }: Props) {
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: i * 0.1 }}
-                    className={`p-4 rounded-xl border ${
+                    className={`p-4 rounded-[12px] border ${
                       result.success
-                        ? 'bg-green-500/10 border-green-500/30'
-                        : 'bg-red-500/10 border-red-500/30'
+                        ? 'bg-[#E1F5EE] border-[#1D9E75]/30'
+                        : 'bg-[#FCEBEB] border-[#791F1F]/20'
                     }`}
                   >
                     <div className="flex items-start gap-3">
                       {result.success ? (
-                        <CheckCircle className="w-6 h-6 text-green-400 flex-shrink-0" />
+                        <CheckCircle className="w-6 h-6 text-[#085041] flex-shrink-0" />
                       ) : (
-                        <XCircle className="w-6 h-6 text-red-400 flex-shrink-0" />
+                        <XCircle className="w-6 h-6 text-[#791F1F] flex-shrink-0" />
                       )}
                       <div className="flex-1">
                         <h4 className="font-semibold mb-1">
                           {job?.job_title} at {job?.company}
                         </h4>
                         <p className={`text-sm ${
-                          result.success ? 'text-green-300' : 'text-red-300'
+                          result.success ? 'text-[#085041]' : 'text-[#791F1F]'
                         }`}>
                           {result.message}
                         </p>
@@ -294,7 +294,7 @@ export default function AutoApply({ resumeId, atsScore, onComplete }: Props) {
 
             <motion.button
               onClick={onComplete}
-              className="w-full py-4 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl font-semibold text-lg flex items-center justify-center gap-2 hover:from-blue-600 hover:to-purple-700 transition-all"
+              className="w-full py-4 bg-[#1D9E75] rounded-[12px] font-semibold text-lg flex items-center justify-center gap-2 hover:bg-[#0F6E56] transition-all"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
