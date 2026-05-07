@@ -1,6 +1,6 @@
 import { useEffect, useEffectEvent, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Briefcase, MapPin, DollarSign, IndianRupee, TrendingUp, Loader2, ArrowRight, Globe, ExternalLink } from 'lucide-react';
+import { Briefcase, MapPin, DollarSign, IndianRupee, Loader2, ArrowRight, Globe, ExternalLink, Clock } from 'lucide-react';
 
 interface JobMatch {
   id: number;
@@ -14,6 +14,8 @@ interface JobMatch {
   job_type: string;
   description?: string;
   source?: string;
+  date_posted?: string;
+  domain?: string;
 }
 
 interface Props {
@@ -28,6 +30,8 @@ export default function JobMatches({ resumeId, atsScore, onComplete }: Props) {
   const [loading, setLoading] = useState(true);
   const [matches, setMatches] = useState<JobMatch[]>([]);
   const [fetchStatus, setFetchStatus] = useState('');
+  const [detectedDomain, setDetectedDomain] = useState('');
+  const [searchRole, setSearchRole] = useState('');
   const canApplyByAts = (atsScore ?? 0) >= 50;
   const isSearchLink = (job: JobMatch) => job.portal.endsWith('_search');
   const liveMatchCount = matches.filter(job => !isSearchLink(job)).length;
@@ -53,25 +57,22 @@ export default function JobMatches({ resumeId, atsScore, onComplete }: Props) {
 
       const fetchData = await fetchRes.json();
       console.log('fetch-real-jobs response:', fetchData);
+      setDetectedDomain(fetchData.detected_domain || '');
+      setSearchRole(fetchData.search_role || '');
       const liveCount = fetchData.live_job_count ?? fetchData.jobs?.filter((job: JobMatch) => !job.portal.endsWith('_search')).length ?? 0;
       const searchCount = fetchData.search_link_count ?? fetchData.jobs?.filter((job: JobMatch) => job.portal.endsWith('_search')).length ?? 0;
       setFetchStatus(
         liveCount > 0
           ? `Found ${liveCount} live jobs${searchCount > 0 ? ` and ${searchCount} search links` : ''}!`
-          : `No live jobs found yet. Showing ${searchCount} search links.`
+          : 'No domain-aligned live jobs found right now.'
       );
 
-      if (Array.isArray(fetchData.jobs) && fetchData.jobs.length > 0) {
-        setMatches(fetchData.jobs);
-      }
+      const hasLiveFetchJobs = Array.isArray(fetchData.jobs) && fetchData.jobs.length > 0;
 
-      const res = await fetch(`${API_BASE}/api/job-matches?resume_id=${resumeId}`);
-      if (res.ok) {
-        const data = await res.json();
-        console.log('job-matches from DB:', data.length, 'jobs');
-        if (Array.isArray(data) && data.length > 0) {
-          setMatches(data);
-        }
+      if (hasLiveFetchJobs) {
+        setMatches(fetchData.jobs);
+      } else {
+        setMatches([]);
       }
     } catch (err) {
       console.error('Fetch error:', err);
@@ -144,6 +145,38 @@ export default function JobMatches({ resumeId, atsScore, onComplete }: Props) {
     }
   };
 
+  const parsePostedDate = (value?: string) => {
+    if (!value) return null;
+    const parsed = new Date(value);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  };
+
+  const getFreshnessLabel = (value?: string) => {
+    const parsed = parsePostedDate(value);
+    if (!parsed) return null;
+
+    const diffMs = Date.now() - parsed.getTime();
+    const diffDays = Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24)));
+
+    if (diffDays <= 1) {
+      return { label: 'Fresh', detail: 'Posted today', tone: 'bg-[#E8F7F1] text-[#0E7F5B] border-[#B7E0D1]' };
+    }
+    if (diffDays <= 7) {
+      return { label: 'Recent', detail: `Posted ${diffDays} day${diffDays === 1 ? '' : 's'} ago`, tone: 'bg-[#EEF5FF] text-[#3366CC] border-[#C8D8FF]' };
+    }
+    if (diffDays <= 30) {
+      return { label: 'Older', detail: `Posted ${diffDays} days ago`, tone: 'bg-[#FFF7E8] text-[#A46A00] border-[#F1D17A]' };
+    }
+
+    return { label: 'Old', detail: `Posted ${diffDays} days ago`, tone: 'bg-[#FFF1F1] text-[#B55A5A] border-[#EDC9C9]' };
+  };
+
+  const formatPostedDate = (value?: string) => {
+    const parsed = parsePostedDate(value);
+    if (!parsed) return null;
+    return parsed.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+  };
+
   const cleanJobDescription = (value?: string) => {
     if (!value) return '';
 
@@ -171,8 +204,17 @@ export default function JobMatches({ resumeId, atsScore, onComplete }: Props) {
           <div className="flex items-center justify-center gap-2 mb-4">
             <span className="px-3 py-1 bg-[#1D9E75]/20 text-[#085041] border border-[#1D9E75]/30 rounded-full text-[10px] font-bold uppercase tracking-wider">Region: India</span>
             <span className="px-3 py-1 bg-[#F8F9FB] text-[#1D9E75] border border-[#1D9E75]/30 rounded-full text-[10px] font-bold uppercase tracking-wider">Sources: Internet APIs</span>
+            {detectedDomain && (
+              <span className="px-3 py-1 bg-[#EEF5FF] text-[#0C447C] border border-[#C8D8FF] rounded-full text-[10px] font-bold uppercase tracking-wider">
+                Domain: {detectedDomain.replace(/_/g, ' ')}
+              </span>
+            )}
           </div>
-          <p className="text-[#444444]">Strictly ranked India-first jobs plus direct LinkedIn, Indeed, and Naukri search links</p>
+          <p className="text-[#444444]">
+            {searchRole
+              ? `Searching domain-aligned roles for: ${searchRole}`
+              : 'Strictly ranked domain-aligned jobs from live sources'}
+          </p>
           {fetchStatus && (
             <p className="text-sm text-[#085041] mt-2">{fetchStatus}</p>
           )}
@@ -208,12 +250,25 @@ export default function JobMatches({ resumeId, atsScore, onComplete }: Props) {
                   transition={{ delay: i * 0.1 }}
                   className="bg-[#FFFFFF] border border-[#E8E8E8] rounded-[12px] p-6 hover:bg-[#FFFFFF] transition-all group"
                 >
+                  {(() => {
+                    const searchLink = isSearchLink(job);
+                    const freshness = getFreshnessLabel(job.date_posted);
+                    const exactDate = formatPostedDate(job.date_posted);
+
+                    return (
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-3">
                         <h3 className="text-xl font-semibold">{job.job_title}</h3>
                         <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${getPortalColor(job.portal)}`}>
                           {job.source || getPortalLabel(job.portal)}
+                        </span>
+                        <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-[0.18em] border ${
+                          searchLink
+                            ? 'bg-[#F4F6F7] text-[#5F6C68] border-[#D8DEDC]'
+                            : 'bg-[#E8F7F1] text-[#0E7F5B] border-[#B7E0D1]'
+                        }`}>
+                          {searchLink ? 'Search Link' : 'Live Job'}
                         </span>
                         <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-tighter border ${
                           job.job_type === 'Remote'
@@ -222,9 +277,14 @@ export default function JobMatches({ resumeId, atsScore, onComplete }: Props) {
                         }`}>
                           {job.job_type || 'On-site'}
                         </span>
+                        {freshness && (
+                          <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-[0.18em] border ${freshness.tone}`}>
+                            {freshness.label}
+                          </span>
+                        )}
                       </div>
 
-                      <div className="flex items-center gap-6 text-sm text-[#444444] mb-3">
+                      <div className="flex flex-wrap items-center gap-6 text-sm text-[#444444] mb-3">
                         <div className="flex items-center gap-2">
                           <Briefcase className="w-4 h-4" />
                           {job.company}
@@ -241,7 +301,28 @@ export default function JobMatches({ resumeId, atsScore, onComplete }: Props) {
                           )}
                           {job.salary || 'Competitive'}
                         </div>
+                        <div className="flex items-center gap-2">
+                          <Clock className="w-4 h-4" />
+                          {searchLink
+                            ? 'Search page only'
+                            : freshness?.detail || 'Posted date unavailable'}
+                        </div>
                       </div>
+
+                      {(exactDate || searchLink) && (
+                        <div className="mb-3 flex flex-wrap items-center gap-3 text-xs">
+                          {exactDate && (
+                            <span className="rounded-full bg-[#F7FAF9] px-3 py-1 text-[#5B6B65] border border-[#E1E8E5]">
+                              Exact date: {exactDate}
+                            </span>
+                          )}
+                          {searchLink && (
+                            <span className="rounded-full bg-[#FFF8E8] px-3 py-1 text-[#8A6A14] border border-[#F1D17A]">
+                              This is not a single job posting, so there is no exact posted date here.
+                            </span>
+                          )}
+                        </div>
+                      )}
 
                       {job.description && (
                         <p className="text-xs text-[#888888] mb-3 line-clamp-2">{cleanJobDescription(job.description)}</p>
@@ -297,6 +378,8 @@ export default function JobMatches({ resumeId, atsScore, onComplete }: Props) {
                     </div>
 
                   </div>
+                    );
+                  })()}
                 </motion.div>
               ))}
             </div>

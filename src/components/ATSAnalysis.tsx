@@ -1,21 +1,18 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Target, 
-  CheckCircle, 
-  AlertCircle, 
-  TrendingUp, 
-  Briefcase, 
-  RefreshCw, 
-  Loader2, 
+import {
+  Target,
+  CheckCircle,
+  AlertCircle,
+  TrendingUp,
+  Briefcase,
+  RefreshCw,
+  Loader2,
   ArrowRight,
-  Zap,
   Sparkles,
   Shield,
   Layers,
-  Cpu,
-  ChevronRight,
-  Award
+  Cpu
 } from 'lucide-react';
 
 interface Props {
@@ -49,6 +46,7 @@ export default function ATSAnalysis({ resume, onComplete }: Props) {
     domain: string;
     suggestions: string[];
     keywords_found: string[];
+    missing_keywords?: string[];
     seniority?: string;
     breakdown?: {
       keyword_match: number;
@@ -116,48 +114,61 @@ export default function ATSAnalysis({ resume, onComplete }: Props) {
     return DOMAIN_OPTIONS.find(opt => opt.value === val) || { icon: Shield, color: 'text-gray-500' };
   };
 
+  const metrics = result ? [
+    { label: 'Keywords', value: result.breakdown?.keyword_match || 0, color: 'bg-[#4379FF]', iconBg: 'bg-[#EEF3FF]', iconColor: 'text-[#4379FF]' },
+    { label: 'Formatting', value: result.breakdown?.formatting_parsability || 0, color: 'bg-[#17A968]', iconBg: 'bg-[#EDFBF4]', iconColor: 'text-[#17A968]' },
+    { label: 'Skills match', value: result.breakdown?.skills_match || 0, color: 'bg-[#F59E0B]', iconBg: 'bg-[#FFF7E8]', iconColor: 'text-[#F59E0B]' },
+    { label: 'Experience', value: result.breakdown?.work_experience_relevance || 0, color: 'bg-[#6B5DFF]', iconBg: 'bg-[#F0EEFF]', iconColor: 'text-[#6B5DFF]' }
+  ] : [];
+
   const currentDomainInfo = getDomainInfo(selectedDomain || '');
   const DomainIcon = currentDomainInfo.icon;
+  const scoreLabel = result && result.score >= 80 ? 'ATS READY' : result && result.score >= 60 ? 'STRONG POTENTIAL' : 'NEEDS WORK';
+  const missingToTarget = result ? Math.max(0, 90 - result.score) : 0;
+  const foundKeywords = result?.keywords_found.slice(0, 6) || [];
+  const missingKeywords = result?.missing_keywords?.slice(0, 5) || [];
 
   return (
-    <div className="max-w-4xl mx-auto space-y-4 pb-12">
-      {/* Header - Ultra Compact */}
+    <div className="space-y-4">
       <motion.div
-        initial={{ opacity: 0, y: -10 }}
+        initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white border border-[#E8E8E8] rounded-[20px] px-6 py-3.5 flex items-center justify-between shadow-sm"
+        className="rounded-[14px] border border-[#B7CEC5] bg-white p-4"
       >
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-[#1D9E75]/10 rounded-xl flex items-center justify-center text-[#1D9E75]">
-            <Sparkles className="w-4.5 h-4.5" />
-          </div>
-          <div>
-            <h2 className="text-lg font-black text-[#111111] tracking-tighter leading-none">ATS Intelligence</h2>
-            <div className={`flex items-center gap-1.5 mt-1 text-[9px] font-black uppercase tracking-widest ${currentDomainInfo.color}`}>
-              <DomainIcon className="w-2.5 h-2.5" />
-              {formatDomainLabel(selectedDomain || 'Detecting...')}
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-[#EEF8F4] text-[#0E7F5B]">
+              <Sparkles className="h-4 w-4" />
+            </div>
+            <div>
+              <h2 className="text-[18px] font-black tracking-tight text-[#111111]">ATS intelligence</h2>
+              <div className="mt-1 flex items-center gap-2 text-[12px] font-medium text-[#4B50F5]">
+                <span className="h-2 w-2 rounded-full bg-[#4B50F5]" />
+                <DomainIcon className={`h-3.5 w-3.5 ${currentDomainInfo.color}`} />
+                <span>{formatDomainLabel(selectedDomain || 'Detecting...')}</span>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="flex items-center gap-2">
-          <select
-            value={selectedDomain || ''}
-            onChange={(e) => handleDomainChange(e.target.value)}
-            className="rounded-[10px] border border-[#E8E8E8] bg-[#F8F9FB] px-3 py-2 text-[10px] font-black text-[#111111] focus:outline-none appearance-none cursor-pointer min-w-[150px]"
-          >
-            {!selectedDomain && <option value="">Auto-Detecting...</option>}
-            {DOMAIN_OPTIONS.map(opt => (
-              <option key={opt.value} value={opt.value}>{opt.label}</option>
-            ))}
-          </select>
-          <button
-            onClick={() => analyzeResume()}
-            disabled={analyzing}
-            className="p-2 bg-[#1D9E75] text-white rounded-[10px] hover:bg-[#0F6E56] transition-all disabled:opacity-50"
-          >
-            {analyzing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-          </button>
+          <div className="flex items-center gap-2">
+            <select
+              value={selectedDomain || ''}
+              onChange={(e) => handleDomainChange(e.target.value)}
+              className="min-w-[160px] rounded-[8px] border border-[#B7CEC5] bg-[#FCFDFC] px-4 py-2.5 text-sm text-[#333333] focus:outline-none"
+            >
+              {!selectedDomain && <option value="">Auto-Detecting...</option>}
+              {DOMAIN_OPTIONS.map(opt => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+            <button
+              onClick={() => analyzeResume()}
+              disabled={analyzing}
+              className="flex h-10 w-10 items-center justify-center rounded-[8px] bg-[#EEF8F4] text-[#0E7F5B] transition-colors hover:bg-[#E2F2EB] disabled:opacity-50"
+            >
+              {analyzing ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+            </button>
+          </div>
         </div>
       </motion.div>
 
@@ -168,141 +179,219 @@ export default function ATSAnalysis({ resume, onComplete }: Props) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="py-16 text-center bg-white border border-[#E8E8E8] rounded-[24px]"
+            className="rounded-[14px] border border-[#B7CEC5] bg-white py-20 text-center"
           >
-            <Loader2 className="w-8 h-8 text-[#1D9E75] animate-spin mx-auto mb-2" />
-            <p className="text-[10px] font-black text-[#111111] uppercase tracking-widest">Parsing Vector...</p>
+            <Loader2 className="mx-auto mb-3 h-8 w-8 animate-spin text-[#0E7F5B]" />
+            <p className="text-sm font-semibold text-[#5B6B65]">Analyzing your resume...</p>
           </motion.div>
         ) : result ? (
           <motion.div
             key="result"
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             className="space-y-4"
           >
-            {/* Dashboard Row - High Density */}
-            <div className="bg-white border border-[#E8E8E8] rounded-[24px] p-6 shadow-sm overflow-hidden relative">
-              <div className="flex flex-col md:flex-row items-center gap-8 relative z-10">
-                {/* Compact Score Circle */}
-                <div className="relative w-32 h-32 shrink-0">
-                  <svg className="w-full h-full transform -rotate-90">
-                    <circle cx="64" cy="64" r="58" stroke="#F8F9FB" strokeWidth="8" fill="none" />
-                    <motion.circle
-                      cx="64" cy="64" r="58" stroke="#1D9E75" strokeWidth="10" fill="none"
-                      strokeDasharray="364"
-                      initial={{ strokeDashoffset: 364 }}
-                      animate={{ strokeDashoffset: 364 - (364 * (result.score / 100)) }}
-                      transition={{ duration: 1.5 }}
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                  <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <span className="text-4xl font-black text-[#111111] tracking-tighter">{result.score}%</span>
-                    <div className="flex items-center gap-1 px-2 py-0.5 bg-[#1D9E75] text-white rounded-full text-[7px] font-black uppercase tracking-widest mt-1">
-                      <Award className="w-2 h-2" />
-                      ATS Ready
+            <div className="grid gap-4 xl:grid-cols-[1.1fr_1.1fr_1fr]">
+              <div className="rounded-[14px] border border-[#B7CEC5] bg-white p-4">
+                <div className="mb-4 text-sm text-[#333333]">Overall ATS score</div>
+                <div className="flex justify-center py-2">
+                  <div className="relative h-40 w-40">
+                    <svg className="h-full w-full -rotate-90">
+                      <circle cx="80" cy="80" r="60" stroke="#E6E8EA" strokeWidth="10" fill="none" />
+                      <motion.circle
+                        cx="80"
+                        cy="80"
+                        r="60"
+                        stroke="#0E7F5B"
+                        strokeWidth="10"
+                        fill="none"
+                        strokeDasharray="377"
+                        initial={{ strokeDashoffset: 377 }}
+                        animate={{ strokeDashoffset: 377 - (377 * (result.score / 100)) }}
+                        transition={{ duration: 1.2 }}
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                      <div className="text-5xl font-black leading-none text-[#111111]">{result.score}%</div>
+                      <div className="mt-2 rounded-full bg-[#0E7F5B] px-3 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-white">
+                        {scoreLabel}
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Metrics Grid */}
-                <div className="grid grid-cols-2 gap-3 w-full">
-                  {[
-                    { label: 'Keywords', value: result.breakdown?.keyword_match || 0, icon: Target, color: 'text-blue-500', bg: 'bg-blue-50' },
-                    { label: 'Formatting', value: result.breakdown?.formatting_parsability || 0, icon: CheckCircle, color: 'text-emerald-500', bg: 'bg-emerald-50' },
-                    { label: 'Skills Match', value: result.breakdown?.skills_match || 0, icon: TrendingUp, color: 'text-orange-500', bg: 'bg-orange-50' },
-                    { label: 'Experience', value: result.breakdown?.work_experience_relevance || 0, icon: Briefcase, color: 'text-purple-500', bg: 'bg-purple-50' }
-                  ].map((item) => (
-                    <div key={item.label} className="bg-[#F8F9FB] p-3 rounded-[12px] border border-[#E8E8E8] flex items-center gap-3 group hover:bg-white hover:shadow-md transition-all">
-                      <div className={`w-9 h-9 ${item.bg} ${item.color} rounded-lg flex items-center justify-center shrink-0 shadow-inner`}>
-                        <item.icon className="w-4 h-4" />
+                <div className="mt-2 rounded-[8px] bg-[#F3F5F6] p-3">
+                  <div className="mb-2 flex items-center justify-between text-sm">
+                    <span className="text-[#666666]">Score</span>
+                    <span className="font-bold text-[#0E7F5B]">{result.score}%</span>
+                  </div>
+                  <div className="h-2 overflow-hidden rounded-full bg-[#D7DDE0]">
+                    <div className="h-full rounded-full bg-[#0E7F5B]" style={{ width: `${result.score}%` }} />
+                  </div>
+                </div>
+
+                <div className="mt-4 grid grid-cols-3 overflow-hidden rounded-[10px] border border-[#B7CEC5]">
+                  <div className="border-r border-[#B7CEC5] bg-[#FCFDFC] px-3 py-3 text-center">
+                    <div className="text-lg font-black text-[#0E7F5B]">{result.score >= 80 ? 'Great' : result.score >= 60 ? 'Good' : 'Fair'}</div>
+                    <div className="text-[9px] font-bold uppercase tracking-[0.18em] text-[#98A59F]">Status</div>
+                  </div>
+                  <div className="border-r border-[#B7CEC5] bg-[#FCFDFC] px-3 py-3 text-center">
+                    <div className="text-lg font-black text-[#111111]">{missingToTarget}</div>
+                    <div className="text-[9px] font-bold uppercase tracking-[0.18em] text-[#98A59F]">To Improve</div>
+                  </div>
+                  <div className="bg-[#FCFDFC] px-3 py-3 text-center">
+                    <div className="text-lg font-black text-[#111111]">90+</div>
+                    <div className="text-[9px] font-bold uppercase tracking-[0.18em] text-[#98A59F]">Target</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid gap-3">
+                {metrics.map((item, index) => {
+                  const Icon = index === 0 ? Target : index === 1 ? CheckCircle : index === 2 ? Sparkles : Briefcase;
+                  return (
+                    <div key={item.label} className="rounded-[12px] border border-[#B7CEC5] bg-white p-4">
+                      <div className="flex items-start gap-3">
+                        <div className={`flex h-8 w-8 items-center justify-center rounded-[8px] ${item.iconBg} ${item.iconColor}`}>
+                          <Icon className="h-4 w-4" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="mb-1 flex items-center justify-between gap-3">
+                            <span className="text-sm text-[#444444]">{item.label}</span>
+                            <span className="text-sm font-black text-[#111111]">{item.value}%</span>
+                          </div>
+                          <div className="h-2 overflow-hidden rounded-full bg-[#E2E5E7]">
+                            <div className={`h-full rounded-full ${item.color}`} style={{ width: `${item.value}%` }} />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="rounded-[14px] border border-[#B7CEC5] bg-white p-4">
+                <div className="mb-4 text-sm font-medium text-[#333333]">Quick fixes</div>
+                <div className="space-y-4">
+                  {result.suggestions.slice(0, 3).map((suggestion, index) => (
+                    <div key={index} className="flex items-start gap-3">
+                      <div className="mt-0.5 flex h-6 w-6 items-center justify-center rounded-full bg-[#EEF8F4] text-[#0E7F5B]">
+                        {index === 0 ? <Target className="h-3.5 w-3.5" /> : index === 1 ? <CheckCircle className="h-3.5 w-3.5" /> : <TrendingUp className="h-3.5 w-3.5" />}
                       </div>
                       <div>
-                        <div className="text-lg font-black text-[#111111] leading-none mb-1">{item.value}%</div>
-                        <div className="text-[8px] font-bold text-gray-400 uppercase tracking-widest leading-none">{item.label}</div>
+                        <div className="text-[18px] leading-none font-black text-[#111111]">
+                          {index === 0 ? 'Add missing keywords' : index === 1 ? 'Fix formatting' : 'Quantify experience'}
+                        </div>
+                        <p className="mt-1 text-sm leading-5 text-[#677671]">{suggestion}</p>
                       </div>
                     </div>
                   ))}
+                </div>
+
+                <div className="mt-8 border-t border-[#D6DFDB] pt-4">
+                  <div className="mb-2 flex items-center justify-between text-sm">
+                    <span className="text-[#666666]">Score to reach 90+</span>
+                    <span className="font-bold text-[#0E7F5B]">+{missingToTarget} pts needed</span>
+                  </div>
+                  <div className="h-2 overflow-hidden rounded-full bg-[#D7DDE0]">
+                    <div className="h-full rounded-full bg-[#0E7F5B]" style={{ width: `${Math.max(10, result.score)}%` }} />
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Strategic Insights & Data */}
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="bg-white border border-[#E8E8E8] rounded-[24px] p-5 shadow-sm">
-                <h3 className="text-[9px] font-black uppercase tracking-widest text-[#111111] mb-4 flex items-center gap-2">
-                  <AlertCircle className="w-3 h-3 text-orange-500" />
-                  Strategy Updates
-                </h3>
-                <div className="space-y-2">
-                  {result.suggestions.slice(0, 3).map((s, i) => (
-                    <div key={i} className="text-[10px] text-[#555555] font-medium leading-relaxed bg-[#F8F9FB] p-2.5 rounded-[10px] border border-transparent hover:border-orange-100 transition-all">
-                      • {s}
+            <div className="grid gap-4 xl:grid-cols-[1fr_1fr]">
+              <div className="rounded-[14px] border border-[#B7CEC5] bg-white p-4">
+                <div className="mb-4 flex items-center gap-2 text-sm font-medium text-[#A76700]">
+                  <AlertCircle className="h-4 w-4" />
+                  Strategy updates
+                </div>
+                <div className="space-y-3">
+                  {result.suggestions.slice(0, 3).map((suggestion, index) => (
+                    <div key={index} className="rounded-[8px] border-l-2 border-[#0E7F5B] bg-[#F4F6F7] px-4 py-3 text-[15px] leading-6 text-[#2E3437]">
+                      {suggestion}
                     </div>
                   ))}
                 </div>
               </div>
 
-              <div className="bg-white border border-[#E8E8E8] rounded-[24px] p-5 shadow-sm">
-                <h3 className="text-[9px] font-black uppercase tracking-widest text-[#111111] mb-4 flex items-center gap-2">
-                  <Sparkles className="w-3 h-3 text-[#1D9E75]" />
-                  Keyword Signals
-                </h3>
-                <div className="flex flex-wrap gap-1.5">
-                  {result.keywords_found.slice(0, 10).map((k, i) => (
-                    <span key={i} className="px-2.5 py-1.5 bg-[#F8F9FB] border border-[#E8E8E8] rounded-[8px] text-[8px] font-bold text-gray-500 hover:text-[#1D9E75] hover:border-[#1D9E75]/30 transition-all">
-                      {k}
+              <div className="rounded-[14px] border border-[#B7CEC5] bg-white p-4">
+                <div className="mb-4 flex items-center gap-2 text-sm font-medium text-[#4D6E62]">
+                  <Sparkles className="h-4 w-4" />
+                  Keyword signals
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {foundKeywords.map((keyword, index) => (
+                    <span key={index} className="rounded-[7px] border border-[#A8D7C6] bg-[#EEF8F4] px-3 py-1.5 text-xs font-medium text-[#236A53]">
+                      {keyword}
+                    </span>
+                  ))}
+                  {missingKeywords.map((keyword, index) => (
+                    <span key={index} className="rounded-[7px] border border-[#F1D17A] bg-[#FFF8DF] px-3 py-1.5 text-xs font-medium text-[#A46A00]">
+                      {keyword}
                     </span>
                   ))}
                 </div>
+
+                <div className="mt-8 border-t border-[#D6DFDB] pt-4">
+                  <div className="flex items-center gap-5 text-[10px] font-bold uppercase tracking-[0.18em] text-[#6B7A75]">
+                    <div className="flex items-center gap-2">
+                      <span className="h-2 w-2 rounded-full bg-[#0E7F5B]" />
+                      Found
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="h-2 w-2 rounded-full bg-[#F4B400]" />
+                      Missing
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
-            {/* Action Button */}
             <button
               onClick={() => onComplete(result.score)}
-              className="w-full py-4 bg-[#111111] rounded-[16px] font-black uppercase tracking-[0.4em] text-[9px] text-white hover:bg-[#1D9E75] transition-all flex items-center justify-center gap-2 shadow-lg"
+              className="flex w-full items-center justify-center gap-2 rounded-[10px] bg-[#0E7F5B] px-6 py-4 text-sm font-black text-white transition-colors hover:bg-[#0B6A4C]"
             >
-              Analyze Job Matchings
-              <ArrowRight className="w-4 h-4" />
+              Analyse job matchings
+              <ArrowRight className="h-4 w-4" />
             </button>
           </motion.div>
         ) : (
-          <div className="p-8 bg-rose-50 text-rose-600 rounded-[24px] text-center text-[10px] font-black uppercase tracking-widest">
+          <div className="rounded-[14px] border border-[#E7C5C5] bg-[#FFF4F4] p-8 text-center text-sm font-semibold text-[#B04E4E]">
             {requestError || 'Service Offline'}
           </div>
         )}
       </AnimatePresence>
 
-      {/* Confirmation Modal */}
       <AnimatePresence>
         {showConfirmModal && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-[#111111]/40 backdrop-blur-sm"
+            className="fixed inset-0 z-[200] flex items-center justify-center bg-[#111111]/35 p-4 backdrop-blur-sm"
           >
             <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
+              initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white rounded-[24px] p-8 max-w-xs w-full shadow-2xl border border-[#E8E8E8]"
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="w-full max-w-sm rounded-[16px] border border-[#B7CEC5] bg-white p-6 shadow-2xl"
             >
-              <h3 className="text-xl font-black text-center mb-1 tracking-tighter">Recalibrate?</h3>
-              <p className="text-[10px] text-center mb-6 text-gray-500 font-medium leading-relaxed px-4">
-                Update weights for <span className="text-[#1D9E75] font-black">{formatDomainLabel(pendingDomain || '')}</span>?
+              <h3 className="text-center text-xl font-black tracking-tight text-[#111111]">Recalibrate?</h3>
+              <p className="mt-2 text-center text-sm text-[#5B6B65]">
+                Update weights for <span className="font-black text-[#0E7F5B]">{formatDomainLabel(pendingDomain || '')}</span>?
               </p>
-              <div className="flex flex-col gap-2">
+              <div className="mt-5 flex flex-col gap-3">
                 <button
                   onClick={confirmDomainChange}
-                  className="w-full py-3 bg-[#1D9E75] text-white text-[9px] font-black uppercase tracking-widest rounded-[10px]"
+                  className="w-full rounded-[10px] bg-[#0E7F5B] py-3 text-sm font-black text-white"
                 >
                   Confirm & Update
                 </button>
                 <button
                   onClick={() => setShowConfirmModal(false)}
-                  className="w-full py-3 bg-white border border-[#E8E8E8] text-gray-400 text-[9px] font-black uppercase tracking-widest rounded-[10px]"
+                  className="w-full rounded-[10px] border border-[#D6DFDB] bg-white py-3 text-sm font-bold text-[#7A8B84]"
                 >
                   Cancel
                 </button>

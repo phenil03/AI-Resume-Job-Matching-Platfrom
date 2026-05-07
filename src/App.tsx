@@ -169,64 +169,64 @@ function App() {
     setCurrentStep('upload');
   };
 
-  return (
-    <div className="min-h-screen bg-[#F8F9FB] text-[#444444] selection:bg-[#1D9E75]/20 selection:text-[#111111]">
-      {/* Background Decor */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 -left-1/4 w-1/2 h-1/2 bg-[#1D9E75]/5 blur-[120px] rounded-full animate-pulse" />
-        <div className="absolute bottom-0 -right-1/4 w-1/2 h-1/2 bg-[#1D9E75]/3 blur-[120px] rounded-full animate-pulse" style={{ animationDelay: '2s' }} />
-      </div>
+  const currentStepIndex = steps.findIndex(step => step.id === currentStep);
+  const completionPercent = Math.round(((currentStepIndex + 1) / steps.length) * 100);
+  const currentPhaseLabel =
+    currentStep === 'upload'
+      ? 'Profile Initialization'
+      : currentStep === 'ats'
+        ? 'ATS Analysis'
+        : currentStep === 'matches'
+          ? 'Job Matching'
+          : 'Application Automation';
 
-      <div className="relative z-10 p-4 md:p-8">
-        <header className="max-w-7xl mx-auto flex justify-between items-center mb-12">
-          <div className="flex items-center gap-12">
+  return (
+    <div className="min-h-screen bg-[#f7f9f8] text-[#444444] selection:bg-[#0C7A5B]/20 selection:text-[#111111]">
+      <div className="relative z-10">
+        <header className="border-b border-[#DCE6E1] bg-white/95 backdrop-blur">
+          <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 md:px-6">
             <div className="flex items-center gap-3 group cursor-pointer" onClick={() => setCurrentStep('upload')}>
-              <div className="w-12 h-12 bg-[#1D9E75] rounded-2xl flex items-center justify-center group-hover:scale-105 transition-transform duration-300 shadow-lg shadow-blue-500/20">
-                <Zap className="w-7 h-7 text-[#FFFFFF]" />
+              <div className="flex h-9 w-9 items-center justify-center rounded-[10px] border border-[#CFE1D9] bg-[#ECF7F2] text-[#0C7A5B] transition-transform duration-300 group-hover:scale-105">
+                <Briefcase className="h-4 w-4" />
               </div>
-              <div>
-                <h1 className="text-2xl font-black tracking-tighter text-[#111111]">
-                  JobApplyAI
-                </h1>
-                <div className="flex items-center gap-2">
-                  <span className="h-1 w-1 rounded-full bg-[#1D9E75] animate-ping" />
-                  <p className="text-[10px] font-bold text-[#AAAAAA] tracking-[0.2em] uppercase">Autonomous Platform</p>
-                </div>
-              </div>
+              <div className="text-[18px] font-black tracking-tight text-[#0C7A5B]">ResumeMatch AI</div>
             </div>
 
-            <nav className="hidden lg:flex items-center gap-8">
-              <button 
-                onClick={() => {
-                  setShowDashboard(false);
-                  setCurrentStep('upload');
-                }}
-                className={`text-sm font-bold tracking-tight transition-all pb-1 border-b-2 ${!showDashboard ? 'text-[#1D9E75] border-[#1D9E75]' : 'text-[#AAAAAA] border-transparent hover:text-[#111111]'}`}
-              >
-                Job Search
-              </button>
-              <button 
-                onClick={() => {
-                  if (!user) setShowAuthModal(true);
-                  else setShowDashboard(true);
-                }}
-                className={`text-sm font-bold tracking-tight transition-all pb-1 border-b-2 ${showDashboard ? 'text-[#1D9E75] border-[#1D9E75]' : 'text-[#AAAAAA] border-transparent hover:text-[#111111]'}`}
-              >
-                Dashboard
-              </button>
-            </nav>
-          </div>
+            <div className="hidden items-center gap-10 md:flex">
+              {[
+                { id: 'ats', label: 'Analyze' },
+                { id: 'matches', label: 'Matches' },
+                { id: 'apply', label: 'Apply' }
+              ].map((item) => {
+                const isActive = currentStep === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => {
+                      if (selectedResume) {
+                        setCurrentStep(item.id as Step);
+                      }
+                    }}
+                    className={`text-sm font-semibold transition-colors ${
+                      isActive ? 'text-[#0C7A5B]' : 'text-[#5F6E68] hover:text-[#0C7A5B]'
+                    }`}
+                  >
+                    {item.label}
+                  </button>
+                );
+              })}
+            </div>
 
-          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
             {user && (
               <button 
                 onClick={() => {
                   setShowDashboard(true);
                   setDashboardTab('inbox');
                 }}
-                className="relative p-2.5 bg-[#FFFFFF] border border-[#E0E0E0] rounded-[8px] hover:bg-[#F8F9FB] transition-all text-[#888888] hover:text-[#1D9E75] group"
+                className="relative p-2 bg-[#F7FBF9] border border-[#D7E5DE] rounded-[10px] hover:bg-[#EEF7F3] transition-all text-[#7A8B84] hover:text-[#1D9E75] group"
               >
-                <Bell className="w-5 h-5" />
+                <Bell className="w-4 h-4" />
                 {unreadCount > 0 && (
                   <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-black rounded-full flex items-center justify-center border-2 border-[#FFFFFF] group-hover:scale-110 transition-transform">
                     {unreadCount}
@@ -235,18 +235,17 @@ function App() {
               </button>
             )}
             {user ? (
-              <div className="flex items-center gap-3 pl-3 pr-2 py-2 bg-[#FFFFFF] border border-[#E0E0E0] rounded-[12px]">
-                <div className="text-right hidden sm:block">
-                  <p className="text-xs font-bold text-[#444444]">{getDisplayName(user)}</p>
-                  <p className="text-[10px] text-[#AAAAAA] truncate max-w-[180px]">{user.email}</p>
-                  <p className="text-[9px] font-medium text-[#AAAAAA] uppercase tracking-wider">Premium Member</p>
+              <div className="flex items-center gap-3 rounded-full border border-[#CFE1D9] bg-[#F7FBF9] pl-4 pr-2 py-2">
+                <div className="hidden sm:flex items-center gap-2 text-[12px] font-medium text-[#0D8C63]">
+                  <span className="h-2 w-2 rounded-full bg-[#12A56E]" />
+                  Premium member
                 </div>
-                <div className="w-8 h-8 bg-[#1D9E75] rounded-[8px] flex items-center justify-center text-xs font-black text-[#FFFFFF] shadow-lg shadow-[#1D9E75]/20 cursor-pointer" onClick={() => setShowDashboard(true)}>
+                <div className="w-8 h-8 bg-[#12A56E] rounded-full flex items-center justify-center text-xs font-black text-[#FFFFFF] cursor-pointer" onClick={() => setShowDashboard(true)}>
                   {getDisplayName(user)[0]?.toUpperCase() || 'U'}
                 </div>
                 <button 
                   onClick={handleLogout}
-                  className="p-2 hover:bg-[#E8E8E8] rounded-lg text-[#AAAAAA] hover:text-red-400 transition-colors"
+                  className="p-2 hover:bg-[#E8E8E8] rounded-full text-[#AAAAAA] hover:text-red-400 transition-colors"
                   title="Log Out"
                 >
                   <LogOut className="w-4 h-4" />
@@ -255,63 +254,125 @@ function App() {
             ) : (
               <button 
                 onClick={() => setShowAuthModal(true)}
-                className="px-6 py-2.5 bg-[#FFFFFF] hover:bg-[#F8F9FB] border border-[#E0E0E0] rounded-[8px] text-sm font-bold text-[#444444] tracking-tight transition-all"
+                className="px-5 py-2.5 rounded-full border border-[#CFE1D9] bg-[#F7FBF9] text-sm font-semibold text-[#0D8C63] transition-all hover:bg-[#EEF7F3]"
               >
-                Sign In
+                Premium member
               </button>
             )}
+            </div>
           </div>
         </header>
 
-        <div className="max-w-7xl mx-auto">
-          {/* Progress Steps - Only show during the search flow */}
+        <main className="mx-auto max-w-6xl px-4 py-10 md:px-6">
           {!showDashboard && (
-            <div className="flex flex-wrap gap-4 mb-12 relative overflow-x-auto pb-4 scrollbar-hide">
-              {steps.map((step, index) => {
-                const Icon = step.icon;
-                const isActive = currentStep === step.id;
-                const isCompleted = steps.findIndex(s => s.id === currentStep) > index;
-                
-                return (
-                  <div key={step.id} className="flex items-center flex-1 min-w-[140px]">
-                    <motion.button
-                      onClick={() => {
-                        if (isCompleted || isActive) {
-                          setCurrentStep(step.id as Step);
-                        }
-                      }}
-                      className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all w-full ${
-                        isActive 
-                          ? 'bg-[#E1F5EE] border-2 border-[#1D9E75] shadow-lg shadow-[#1D9E75]/10' 
-                          : isCompleted 
-                          ? 'bg-[#E1F5EE] border border-[#1D9E75]/30 cursor-pointer hover:bg-[#E1F5EE]' 
-                          : 'bg-[#F8F9FB] border border-[#E8E8E8] opacity-40 cursor-not-allowed'
-                      }`}
-                      whileHover={isCompleted || isActive ? { y: -2 } : {}}
-                      whileTap={isCompleted || isActive ? { scale: 0.98 } : {}}
-                    >
-                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
-                        isActive 
-                          ? 'bg-[#1D9E75] shadow-lg shadow-[#1D9E75]/30' 
-                          : isCompleted 
-                          ? 'bg-[#1D9E75]' 
-                          : 'bg-[#E8E8E8]'
-                      }`}>
-                        {isCompleted ? <CheckCircle className="w-4 h-4" /> : <Icon className="w-4 h-4" />}
-                      </div>
-                      <div className="text-left hidden sm:block">
-                        <div className="font-bold text-xs whitespace-nowrap">{step.label}</div>
-                        <div className="text-[10px] text-[#AAAAAA] font-medium">0{index + 1}</div>
-                      </div>
-                    </motion.button>
-                    {index < steps.length - 1 && (
-                      <div className={`h-[1px] flex-1 mx-2 min-w-[20px] ${
-                        isCompleted ? 'bg-[#1D9E75]/50' : 'bg-[#E8E8E8]'
-                      }`} />
-                    )}
+            <div className="mx-auto mb-16 max-w-[1180px]">
+              <div className="resume-stepper-card relative overflow-hidden rounded-[18px] border border-[#eef2f0] bg-white px-6 py-5 shadow-[0_14px_40px_rgba(16,24,40,0.06)] md:px-7 md:py-6">
+                <div className="relative mb-6 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                  <div className="max-w-[620px]">
+                    <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-[#ecf5f1] px-3 py-1 text-[10px] font-extrabold uppercase tracking-[0.22em] text-[#0d7f61]">
+                      <span className="h-2 w-2 rounded-full bg-[#10b981]" />
+                      Guided Workflow
+                    </div>
+                    <h2 className="text-[28px] font-black tracking-[-0.04em] text-[#0f1720] md:text-[34px]">
+                      {steps[currentStepIndex]?.label || 'Upload Resume'}
+                    </h2>
+                    <p className="mt-2 max-w-[560px] text-[14px] leading-6 text-[#667c73]">
+                      Step {currentStepIndex + 1} of 4. <span className="font-semibold text-[#0d7f61]">{currentPhaseLabel}</span> in progress so we can move from upload to applications with less friction.
+                    </p>
                   </div>
-                );
-              })}
+
+                  <div className="flex items-center gap-3 self-start rounded-[14px] bg-[#f7f9f8] px-4 py-3">
+                    <div
+                      className="relative flex h-12 w-12 items-center justify-center rounded-full"
+                      style={{
+                        background: `conic-gradient(#8ab7a7 ${completionPercent * 3.6}deg, #dce8e1 0deg)`
+                      }}
+                    >
+                      <div className="flex h-[38px] w-[38px] items-center justify-center rounded-full bg-white text-[10px] font-black text-[#0c7a5b]">
+                        {completionPercent}%
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#8ca198]">Progress</p>
+                      <p className="mt-0.5 text-[12px] font-semibold leading-4 text-[#152129]">
+                        {currentStepIndex + 1} of {steps.length} milestones cleared
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="relative mb-4 overflow-hidden rounded-full bg-[#edf2ef]">
+                  <motion.div
+                    className="relative h-[6px] rounded-full bg-[#0c7a5b]"
+                    initial={false}
+                    animate={{ width: `${completionPercent}%` }}
+                    transition={{ duration: 0.45, ease: 'easeOut' }}
+                  />
+                </div>
+
+                <div className="relative grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
+                  {steps.map((step, index) => {
+                    const isActive = currentStep === step.id;
+                    const isCompleted = currentStepIndex > index;
+                    const Icon = step.icon;
+
+                    return (
+                      <button
+                        key={step.id}
+                        onClick={() => {
+                          if (isCompleted || isActive) {
+                            setCurrentStep(step.id as Step);
+                          }
+                        }}
+                        className={`group rounded-[12px] border p-4 text-left transition-all duration-300 ${
+                          isActive
+                            ? 'border-[#0c7a5b] bg-white shadow-[0_10px_28px_rgba(12,122,91,0.08)]'
+                            : isCompleted
+                              ? 'border-[#e7edea] bg-[#fbfcfc] hover:-translate-y-0.5 hover:shadow-[0_10px_24px_rgba(16,24,40,0.04)]'
+                              : 'border-[#eef2f0] bg-[#f8faf9] text-[#90a39a]'
+                        }`}
+                      >
+                        <div className="mb-3 flex items-start justify-between gap-3">
+                          <div
+                            className={`flex h-9 w-9 items-center justify-center rounded-[10px] border transition-colors ${
+                              isActive
+                                ? 'border-[#b9ddd0] bg-[#eef8f3] text-[#0c7a5b]'
+                                : isCompleted
+                                  ? 'border-[#e0e8e3] bg-white text-[#6a7d75]'
+                                  : 'border-[#e6efea] bg-white text-[#9bada5]'
+                            }`}
+                          >
+                            {isCompleted ? <CheckCircle className="h-4 w-4" /> : <Icon className="h-4 w-4" />}
+                          </div>
+                          <span
+                            className={`rounded-[4px] border px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.15em] ${
+                              isActive
+                                ? 'border-[#c6e3d8] bg-[#eef8f3] text-[#0c7a5b]'
+                                : isCompleted
+                                  ? 'border-[#dde7e2] bg-white text-[#7b8f87]'
+                                  : 'border-[#dfe7e2] bg-white text-[#a1b0aa]'
+                            }`}
+                          >
+                            {isActive ? 'Current' : isCompleted ? 'Done' : `Step 0${index + 1}`}
+                          </span>
+                        </div>
+                        <p className={`text-[16px] font-bold tracking-[-0.02em] ${isActive || isCompleted ? 'text-[#22342d]' : 'text-[#8da199]'}`}>
+                          {step.label}
+                        </p>
+                        <p className={`mt-1 text-[13px] leading-5 ${isActive ? 'text-[#637a71]' : isCompleted ? 'text-[#7b8f87]' : 'text-[#a0aea8]'}`}>
+                          {step.id === 'upload'
+                            ? 'Start with a clean, ATS-readable resume.'
+                            : step.id === 'ats'
+                              ? 'Measure keyword strength and fix weak spots.'
+                              : step.id === 'matches'
+                                ? 'Pull roles that align with your profile.'
+                                : 'Launch applications once everything is ready.'}
+                        </p>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
           )}
 
@@ -345,7 +406,7 @@ function App() {
                     onComplete={handleApplyComplete}
                   />
                 ) : (
-                  <div className="flex flex-col items-center justify-center py-20 bg-[#FFFFFF] border border-[#E8E8E8] rounded-[12px] p-12 text-center">
+                  <div className="flex flex-col items-center justify-center rounded-[22px] border border-[#E1ECE7] bg-white p-12 py-20 text-center shadow-[0_8px_30px_rgba(17,24,39,0.04)]">
                     <Lock className="w-16 h-16 text-[#1D9E75] mb-6 mx-auto opacity-50" />
                     <h3 className="text-2xl font-black mb-3">Authentication Required</h3>
                     <p className="text-[#AAAAAA] max-w-sm mx-auto mb-8 font-medium">
@@ -474,7 +535,7 @@ function App() {
               </motion.div>
             )}
           </AnimatePresence>
-        </div>
+        </main>
       </div>
 
       {/* Global Auth Modal */}

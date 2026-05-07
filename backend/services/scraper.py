@@ -11,6 +11,7 @@ import requests
 from bs4 import BeautifulSoup
 
 from models.schemas import AggregatedJob, JobMatch
+from services.analysis import detect_domain, get_domain_search_profile
 
 
 REQUEST_TIMEOUT = 12
@@ -47,6 +48,39 @@ def matches_location(text: str, location: str) -> bool:
     if not location_query or location_query in {"india", "remote", "worldwide", "global"}:
         return True
     return location_query in (text or "").lower()
+
+
+def domain_job_score(job: AggregatedJob | JobMatch, search_profile: dict) -> float:
+    searchable = " ".join([
+        getattr(job, "title", "") or "",
+        getattr(job, "company", "") or "",
+        getattr(job, "location", "") or "",
+        getattr(job, "description", "") or "",
+    ]).lower()
+
+    score = 0.0
+    for title in search_profile.get("titles", []):
+        if title.lower() in searchable:
+            score += 5
+    for term in search_profile.get("detect_terms", []):
+        if term.lower() in searchable:
+            score += 2.5
+    for skill in search_profile.get("skills", []):
+        if skill.lower() in searchable:
+            score += 1.5
+    return score
+
+
+def filter_jobs_for_domain(jobs: List[AggregatedJob], search_profile: dict) -> List[AggregatedJob]:
+    if not jobs:
+        return []
+
+    scored_jobs = [(job, domain_job_score(job, search_profile)) for job in jobs]
+    aligned_jobs = [job for job, score in scored_jobs if score >= 5]
+    if aligned_jobs:
+        return aligned_jobs
+
+    return []
 
 
 def normalize_job_type(value, location: str = "", title: str = "") -> str:
@@ -172,6 +206,11 @@ def fetch_indeed_rss_jobs(role: str, location: str) -> List[AggregatedJob]:
             description_html = item.findtext("description", default="")
             summary = normalize_description(description_html)
             location_text = title_location or location
+            searchable = f"{title} {company} {location_text} {summary}".lower()
+            if not matches_role(searchable, role):
+                continue
+            if not matches_location(searchable, location):
+                continue
             jobs.append(
                 AggregatedJob(
                     title=title.strip(),
@@ -199,9 +238,14 @@ def aggregate_jobs(role: str, location: str = "India") -> List[AggregatedJob]:
     return dedupe_and_sort_jobs(jobs)
 
 
-def get_real_time_jobs(skills: List[str], location: str = "India") -> List[JobMatch]:
-    role = " ".join(skills[:3]).strip() if skills else "Software Engineer"
-    aggregated_jobs = aggregate_jobs(role, location)
+def get_real_time_jobs(skills: List[str], location: str = "India", resume_text: str = "", job_description: str = "") -> List[JobMatch]:
+    domain = detect_domain(resume_text, job_description)
+    search_profile = get_domain_search_profile(domain, resume_text, job_description)
+    role = search_profile["primary_role"]
+    if search_profile["role_keywords"]:
+        role = f"{role} {' '.join(search_profile['role_keywords'][:2])}".strip()
+
+    aggregated_jobs = filter_jobs_for_domain(aggregate_jobs(role, location), search_profile)
     real_jobs = [
         JobMatch(
             title=job.title,
@@ -223,7 +267,7 @@ def get_real_time_jobs(skills: List[str], location: str = "India") -> List[JobMa
         if os.path.exists(db_path):
             with open(db_path, "r", encoding="utf-8") as file:
                 local_data = json.load(file)
-            return [
+            local_jobs = [
                 JobMatch(
                     title=item["title"],
                     company=item["company"],
@@ -233,8 +277,10 @@ def get_real_time_jobs(skills: List[str], location: str = "India") -> List[JobMa
                     job_url=item["job_url"],
                     description=item["description"],
                 )
-                for item in local_data[:20]
+                for item in local_data
             ]
+            filtered_local_jobs = [job for job in local_jobs if domain_job_score(job, search_profile) >= 5]
+            return filtered_local_jobs[:10]
     except Exception as exc:
         print(f"[CRITICAL] Error reading local DB fallback: {exc}")
 

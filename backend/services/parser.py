@@ -2,6 +2,8 @@ import spacy
 import PyPDF2
 import io
 import re
+import zipfile
+from html import unescape
 from models.schemas import ResumeData
 
 # Load spaCy
@@ -45,6 +47,82 @@ def parse_pdf(file_content: bytes) -> str:
         print(f"Error parsing PDF: {e}")
         return ""
 
+def clean_extracted_text(text: str) -> str:
+    if not text:
+        return ""
+
+    cleaned = unescape(text)
+    cleaned = cleaned.replace("\r", "\n")
+    cleaned = re.sub(r"[ \t]+", " ", cleaned)
+    cleaned = re.sub(r"\n{3,}", "\n\n", cleaned)
+    return cleaned.strip()
+
+def parse_docx(file_content: bytes) -> str:
+    try:
+        with zipfile.ZipFile(io.BytesIO(file_content)) as docx:
+            text_parts = []
+            xml_targets = [
+                "word/document.xml",
+                "word/header1.xml",
+                "word/header2.xml",
+                "word/footer1.xml",
+                "word/footer2.xml",
+            ]
+
+            for target in xml_targets:
+                if target not in docx.namelist():
+                    continue
+
+                xml = docx.read(target).decode("utf-8", errors="ignore")
+                xml = re.sub(r"</w:p>", "\n", xml)
+                xml = re.sub(r"<[^>]+>", " ", xml)
+                text_parts.append(xml)
+
+            return clean_extracted_text("\n".join(text_parts))
+    except Exception as e:
+        print(f"Error parsing DOCX: {e}")
+        return ""
+
+def parse_rtf(file_content: bytes) -> str:
+    try:
+        raw = file_content.decode("utf-8", errors="ignore")
+        raw = re.sub(r"\\'[0-9a-fA-F]{2}", " ", raw)
+        raw = re.sub(r"\\par[d]?", "\n", raw)
+        raw = re.sub(r"\\[a-zA-Z]+-?\d* ?", " ", raw)
+        raw = re.sub(r"[{}]", " ", raw)
+        return clean_extracted_text(raw)
+    except Exception as e:
+        print(f"Error parsing RTF: {e}")
+        return ""
+
+def parse_text_bytes(file_content: bytes) -> str:
+    for encoding in ("utf-8", "utf-16", "latin-1"):
+        try:
+            return clean_extracted_text(file_content.decode(encoding))
+        except UnicodeDecodeError:
+            continue
+    return ""
+
+def parse_uploaded_file(file_content: bytes, filename: str = "", file_type: str = "") -> str:
+    filename_lower = (filename or "").lower()
+    file_type_lower = (file_type or "").lower()
+
+    if filename_lower.endswith(".pdf") or "pdf" in file_type_lower:
+        return clean_extracted_text(parse_pdf(file_content))
+    if filename_lower.endswith(".docx") or "wordprocessingml.document" in file_type_lower:
+        return parse_docx(file_content)
+    if filename_lower.endswith(".rtf") or "rtf" in file_type_lower:
+        return parse_rtf(file_content)
+    if filename_lower.endswith(".txt") or file_type_lower.startswith("text/"):
+        return parse_text_bytes(file_content)
+    if filename_lower.endswith(".doc"):
+        return ""
+
+    parsed = clean_extracted_text(parse_pdf(file_content))
+    if parsed:
+        return parsed
+    return parse_text_bytes(file_content)
+
 def extract_email(text: str) -> str:
     pattern = r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}'
     match = re.search(pattern, text)
@@ -64,15 +142,21 @@ def extract_name(text: str) -> str:
     return "Candidate Name"
 
 def extract_keywords_from_resume(text):
-    doc = nlp(text)
+    text_lower = text.lower()
     keywords = set()
+
+    for skill in SKILLS_LIST:
+        pattern = r'(?<![a-z0-9])' + re.escape(skill.lower()) + r'(?![a-z0-9])'
+        if re.search(pattern, text_lower):
+            keywords.add(skill)
+
+    doc = nlp(text[:8000])
     for ent in doc.ents:
-        if ent.label_ in ["ORG", "PRODUCT", "GPE", "WORK_OF_ART"]:
-            keywords.add(ent.text.lower().strip())
-    for chunk in doc.noun_chunks:
-        clean = chunk.text.lower().strip()
-        if 2 < len(clean) < 40 and clean.isascii():
-            keywords.add(clean)
+        if ent.label_ in ["ORG", "PRODUCT"]:
+            clean = ent.text.strip()
+            if 2 < len(clean) < 40 and clean.isascii():
+                keywords.add(clean)
+
     return list(keywords)
 
 def extract_skills(text: str) -> list:

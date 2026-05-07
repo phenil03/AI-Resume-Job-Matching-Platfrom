@@ -1,4 +1,43 @@
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap");
 @import "tailwindcss";
+
+@layer base {
+  :root {
+    color-scheme: light;
+    --rm-bg: #f4f8f6;
+    --rm-surface: rgba(255, 255, 255, 0.76);
+    --rm-text: #1b2a24;
+    --rm-muted: #5d7369;
+    --rm-accent: #0c7a5b;
+  }
+
+  html {
+    background: var(--rm-bg);
+  }
+
+  body {
+    font-family: "Manrope", ui-sans-serif, system-ui, sans-serif;
+    color: var(--rm-text);
+    background: #f7f9f8;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: "Space Grotesk", "Manrope", ui-sans-serif, system-ui, sans-serif;
+    letter-spacing: -0.03em;
+  }
+
+  #root {
+    min-height: 100vh;
+  }
+}
 
 @layer utilities {
   @keyframes shimmer {
@@ -7,5 +46,9 @@
   }
   .animate-shimmer {
     animation: shimmer 2s infinite;
+  }
+
+  .resume-stepper-card::after {
+    content: none;
   }
 }

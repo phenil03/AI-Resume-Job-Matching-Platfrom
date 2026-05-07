@@ -93,6 +93,66 @@ const INDIA_PRIORITY_CITIES = [
   'Noida'
 ];
 
+const STRICT_FRESH_DAYS = 3;
+const RECENT_FRESH_DAYS = 7;
+const MAX_JOB_AGE_DAYS = 14;
+
+function normalizeDatePosted(value) {
+  if (!value && value !== 0) return null;
+
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? null : value.toISOString();
+  }
+
+  if (typeof value === 'number') {
+    const timestamp = value > 9999999999 ? value : value * 1000;
+    const parsed = new Date(timestamp);
+    return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString();
+  }
+
+  const trimmed = String(value).trim();
+  if (!trimmed) return null;
+
+  if (/^\d+$/.test(trimmed)) {
+    const numericValue = Number(trimmed);
+    return normalizeDatePosted(numericValue);
+  }
+
+  const parsed = new Date(trimmed);
+  return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString();
+}
+
+function getJobAgeInDays(datePosted) {
+  const normalized = normalizeDatePosted(datePosted);
+  if (!normalized) return Number.POSITIVE_INFINITY;
+
+  const diffMs = Date.now() - new Date(normalized).getTime();
+  if (diffMs < 0) return 0;
+  return diffMs / (1000 * 60 * 60 * 24);
+}
+
+function isFreshJob(job, maxAgeDays) {
+  return getJobAgeInDays(job.date_posted) <= maxAgeDays;
+}
+
+function getFreshnessBoost(datePosted) {
+  const ageInDays = getJobAgeInDays(datePosted);
+  if (!Number.isFinite(ageInDays)) return -18;
+  if (ageInDays <= 1) return 20;
+  if (ageInDays <= STRICT_FRESH_DAYS) return 14;
+  if (ageInDays <= RECENT_FRESH_DAYS) return 8;
+  if (ageInDays <= MAX_JOB_AGE_DAYS) return 2;
+  return -24;
+}
+
+function compareJobsByFreshnessAndScore(a, b) {
+  const ageDiff = getJobAgeInDays(a.date_posted) - getJobAgeInDays(b.date_posted);
+  if (Math.abs(ageDiff) > 0.05) {
+    return ageDiff;
+  }
+  return b.match_score - a.match_score;
+}
+
 function inferJobType(location, title) {
   const text = `${location || ''} ${title || ''}`.toLowerCase();
   if (text.includes('remote') || text.includes('worldwide')) return 'Remote';
@@ -140,6 +200,18 @@ function isIndiaFriendlyRemoteJob(location) {
       text.includes('worldwide') ||
       text.includes('anywhere')
     )
+  );
+}
+
+function isBroadRemoteJob(location) {
+  const text = normalizeLocationText(location).toLowerCase();
+  return (
+    text.includes('remote') ||
+    text.includes('worldwide') ||
+    text.includes('anywhere') ||
+    text.includes('global') ||
+    text.includes('asia') ||
+    text.includes('apac')
   );
 }
 
@@ -313,6 +385,8 @@ function rankJob(job, skills, queryTerms, roleHints = [], profile = null) {
     score += Math.min(12, anchorHits * 4);
   }
 
+  score += getFreshnessBoost(job.date_posted);
+
   if (roleMatchCount === 0 && titleSkillHits === 0 && anchorHits < 2) {
     return 0;
   }
@@ -377,6 +451,16 @@ function buildIndiaQueries(profile) {
   return [...queries].slice(0, 8);
 }
 
+function buildBroadQueries(profile) {
+  const { roleHints = [], matchedDomainSkills = [] } = profile;
+  return [...new Set([
+    ...roleHints.slice(0, 3),
+    ...matchedDomainSkills.slice(0, 4),
+    `${roleHints[0] || 'Software Engineer'} Remote`,
+    `${roleHints[0] || 'Software Engineer'} Worldwide`
+  ].filter(Boolean))].slice(0, 8);
+}
+
 async function fetchJobsFromAPIs(profile) {
   const { searchSkills, roleHints = [], matchedDomainSkills = [] } = profile;
   const queryTerms = getProfileQueryTerms(profile).slice(0, 8);
@@ -388,9 +472,10 @@ async function fetchJobsFromAPIs(profile) {
     queryTerms[0]
   ].filter(Boolean);
   const indiaQueries = buildIndiaQueries(profile);
+  const broadQueries = buildBroadQueries(profile);
 
-  const adzunaAppId = process.env.ADZUNA_APP_ID;
-  const adzunaKey = process.env.ADZUNA_API_KEY;
+  const adzunaAppId = process.env.ADZUNA_APP_ID?.trim();
+  const adzunaKey = process.env.ADZUNA_API_KEY?.trim();
   const adzunaPages = [1, 2];
 
   const adzunaCalls = adzunaAppId && adzunaKey
@@ -408,6 +493,7 @@ async function fetchJobsFromAPIs(profile) {
               salary: formatIndianSalary(job.salary_min, job.salary_max),
               description: normalizeDescription(job.description),
               url: job.redirect_url,
+              date_posted: normalizeDatePosted(job.created || job.created_time || job.updated),
               portal: 'adzuna_in',
               source: 'Adzuna India',
               job_type: inferJobType(job.location?.display_name, job.title)
@@ -423,7 +509,10 @@ async function fetchJobsFromAPIs(profile) {
       timeout: 9000
     }).then(res =>
       (Array.isArray(res.data?.jobs) ? res.data.jobs : [])
-      .filter(job => isIndiaFriendlyRemoteJob(job.candidate_required_location || ''))
+      .filter(job => {
+        const location = job.candidate_required_location || '';
+        return !location || isIndiaFriendlyRemoteJob(location) || isBroadRemoteJob(location);
+      })
       .map(job => ({
         title: job.title,
         company: job.company_name,
@@ -431,6 +520,7 @@ async function fetchJobsFromAPIs(profile) {
         salary: job.salary || 'Competitive',
         description: normalizeDescription(job.description),
         url: job.url,
+        date_posted: normalizeDatePosted(job.publication_date || job.created_at || job.updated_at),
         portal: 'remotive',
         source: 'Remotive',
         job_type: inferJobType(job.candidate_required_location, job.title)
@@ -438,9 +528,66 @@ async function fetchJobsFromAPIs(profile) {
     ).catch(() => [])
   );
 
+  const indeedRssCalls = broadQueries.slice(0, 4).flatMap(query => ([
+    axios.get(`https://in.indeed.com/rss?q=${encodeURIComponent(query)}&l=${encodeURIComponent('India')}`, {
+      timeout: 9000,
+      headers: { 'User-Agent': 'JobApplyAI/1.0' }
+    }).then(res => {
+      const xml = String(res.data || '');
+      const items = [...xml.matchAll(/<item>([\s\S]*?)<\/item>/gi)];
+      return items.map(([, item]) => {
+        const titleRaw = (item.match(/<title><!\[CDATA\[(.*?)\]\]><\/title>/i)?.[1] || item.match(/<title>(.*?)<\/title>/i)?.[1] || '').trim();
+        const link = (item.match(/<link>(.*?)<\/link>/i)?.[1] || '').trim();
+        const description = normalizeDescription(item.match(/<description><!\[CDATA\[(.*?)\]\]><\/description>/i)?.[1] || '');
+        const pubDate = normalizeDatePosted(item.match(/<pubDate>(.*?)<\/pubDate>/i)?.[1] || '');
+        const titleParts = titleRaw.split(' - ');
+        return {
+          title: (titleParts[0] || titleRaw || query).trim(),
+          company: (titleParts[1] || 'Indeed').trim(),
+          location: (titleParts[2] || 'India').trim(),
+          salary: 'Competitive',
+          description,
+          url: link,
+          date_posted: pubDate,
+          portal: 'indeed_rss',
+          source: 'Indeed India',
+          job_type: inferJobType(titleParts[2] || 'India', titleParts[0] || titleRaw)
+        };
+      }).filter(job => job.title && job.url);
+    }).catch(() => []),
+    axios.get(`https://in.indeed.com/rss?q=${encodeURIComponent(query)}&l=${encodeURIComponent('Remote')}`, {
+      timeout: 9000,
+      headers: { 'User-Agent': 'JobApplyAI/1.0' }
+    }).then(res => {
+      const xml = String(res.data || '');
+      const items = [...xml.matchAll(/<item>([\s\S]*?)<\/item>/gi)];
+      return items.map(([, item]) => {
+        const titleRaw = (item.match(/<title><!\[CDATA\[(.*?)\]\]><\/title>/i)?.[1] || item.match(/<title>(.*?)<\/title>/i)?.[1] || '').trim();
+        const link = (item.match(/<link>(.*?)<\/link>/i)?.[1] || '').trim();
+        const description = normalizeDescription(item.match(/<description><!\[CDATA\[(.*?)\]\]><\/description>/i)?.[1] || '');
+        const pubDate = normalizeDatePosted(item.match(/<pubDate>(.*?)<\/pubDate>/i)?.[1] || '');
+        const titleParts = titleRaw.split(' - ');
+        const location = (titleParts[2] || 'Remote').trim();
+        return {
+          title: (titleParts[0] || titleRaw || query).trim(),
+          company: (titleParts[1] || 'Indeed').trim(),
+          location,
+          salary: 'Competitive',
+          description,
+          url: link,
+          date_posted: pubDate,
+          portal: 'indeed_rss',
+          source: 'Indeed Remote',
+          job_type: inferJobType(location, titleParts[0] || titleRaw)
+        };
+      }).filter(job => job.title && job.url);
+    }).catch(() => [])
+  ]));
+
   const apiCalls = [
     ...adzunaCalls,
     ...remotiveCalls,
+    ...indeedRssCalls,
     axios.get('https://remoteok.com/api', {
       timeout: 9000,
       headers: { 'User-Agent': 'JobApplyAI/1.0' }
@@ -453,6 +600,7 @@ async function fetchJobsFromAPIs(profile) {
         salary: job.salary_min ? `$${Math.round(job.salary_min / 1000)}k+` : 'Worldwide Competitive',
         description: normalizeDescription(job.description),
         url: job.url || `https://remoteok.com/remote-jobs/${job.id}`,
+        date_posted: normalizeDatePosted(job.date || job.iso_date || job.epoch || job.time),
         portal: 'remoteok',
         source: 'RemoteOK',
         job_type: inferJobType(job.location, job.position)
@@ -468,6 +616,7 @@ async function fetchJobsFromAPIs(profile) {
         salary: 'Competitive',
         description: normalizeDescription(job.description),
         url: job.url,
+        date_posted: normalizeDatePosted(job.created_at || job.published_at || job.updated_at),
         portal: 'arbeitnow',
         source: 'Arbeitnow',
         job_type: inferJobType(Array.isArray(job.location) ? job.location.join(', ') : job.location, job.title)
@@ -480,7 +629,7 @@ async function fetchJobsFromAPIs(profile) {
 
   const ranked = dedupeJobs(jobs)
     .filter(job => job.title && job.company && job.url)
-    .filter(job => isIndiaLocation(job.location) || isIndiaFriendlyRemoteJob(job.location) || (job.job_type || '').toLowerCase() === 'remote')
+    .filter(job => isIndiaLocation(job.location) || isIndiaFriendlyRemoteJob(job.location) || isBroadRemoteJob(job.location) || (job.job_type || '').toLowerCase() === 'remote')
     .filter(job => isStrictDomainMatch(job, profile))
     .map(job => ({
       ...job,
@@ -490,25 +639,36 @@ async function fetchJobsFromAPIs(profile) {
 
   const indiaFirst = ranked
     .filter(job => job.match_score >= 45)
+    .filter(job => isFreshJob(job, RECENT_FRESH_DAYS))
     .sort((a, b) => {
       const aIndia = isIndiaLocation(a.location) ? 1 : 0;
       const bIndia = isIndiaLocation(b.location) ? 1 : 0;
-      return bIndia - aIndia || b.match_score - a.match_score;
+      return bIndia - aIndia || compareJobsByFreshnessAndScore(a, b);
+    });
+
+  const strictlyFresh = ranked
+    .filter(job => job.match_score >= 45)
+    .filter(job => isFreshJob(job, STRICT_FRESH_DAYS))
+    .sort((a, b) => {
+      const aIndia = isIndiaLocation(a.location) ? 1 : 0;
+      const bIndia = isIndiaLocation(b.location) ? 1 : 0;
+      return bIndia - aIndia || compareJobsByFreshnessAndScore(a, b);
     });
 
   const searchLinks = buildPortalSearchLinks(profile);
   const broadFallback = dedupeJobs(jobs)
     .filter(job => job.title && job.company && job.url)
-    .filter(job => isIndiaLocation(job.location) || isIndiaFriendlyRemoteJob(job.location) || (job.job_type || '').toLowerCase() === 'remote')
+    .filter(job => isIndiaLocation(job.location) || isIndiaFriendlyRemoteJob(job.location) || isBroadRemoteJob(job.location) || (job.job_type || '').toLowerCase() === 'remote')
     .map(job => ({
       ...job,
       match_score: rankJob(job, scoringSkills, queryTerms, roleHints, profile)
     }))
     .filter(job => job.match_score >= 28)
+    .filter(job => isFreshJob(job, MAX_JOB_AGE_DAYS))
     .sort((a, b) => {
       const aIndia = isIndiaLocation(a.location) ? 1 : 0;
       const bIndia = isIndiaLocation(b.location) ? 1 : 0;
-      return bIndia - aIndia || b.match_score - a.match_score;
+      return bIndia - aIndia || compareJobsByFreshnessAndScore(a, b);
     });
 
   const globalFallback = dedupeJobs(jobs)
@@ -518,10 +678,11 @@ async function fetchJobsFromAPIs(profile) {
       match_score: rankJob(job, scoringSkills, queryTerms, roleHints, profile)
     }))
     .filter(job => job.match_score >= 28)
+    .filter(job => isFreshJob(job, MAX_JOB_AGE_DAYS))
     .sort((a, b) => {
       const aRemote = ((a.job_type || '').toLowerCase() === 'remote' || /worldwide|anywhere|remote/i.test(a.location || '')) ? 1 : 0;
       const bRemote = ((b.job_type || '').toLowerCase() === 'remote' || /worldwide|anywhere|remote/i.test(b.location || '')) ? 1 : 0;
-      return bRemote - aRemote || b.match_score - a.match_score;
+      return bRemote - aRemote || compareJobsByFreshnessAndScore(a, b);
     });
 
   const rescueTerms = [...new Set([...roleHints, ...queryTerms.slice(0, 4), ...scoringSkills.slice(0, 4)].filter(Boolean))];
@@ -537,10 +698,22 @@ async function fetchJobsFromAPIs(profile) {
       };
     })
     .filter(job => job.match_score > 0)
-    .sort((a, b) => b.match_score - a.match_score);
+    .filter(job => isFreshJob(job, MAX_JOB_AGE_DAYS))
+    .sort((a, b) => compareJobsByFreshnessAndScore(a, b));
 
-  const liveJobs = (indiaFirst.length > 0 ? indiaFirst : broadFallback.length > 0 ? broadFallback : globalFallback.length > 0 ? globalFallback : lastResort).slice(0, 60);
-  return [...liveJobs, ...searchLinks].slice(0, 80);
+  const liveJobs = (
+    strictlyFresh.length > 0
+      ? strictlyFresh
+      : indiaFirst.length > 0
+        ? indiaFirst
+        : broadFallback.length > 0
+          ? broadFallback
+          : globalFallback.length > 0
+            ? globalFallback
+            : lastResort
+  ).slice(0, 60);
+
+  return liveJobs.length > 0 ? liveJobs : searchLinks;
 }
 
 function calculateMatchScore(job, skills) {
@@ -624,9 +797,9 @@ export default async function handler(req, res) {
 
       if (error) throw error;
 
-      const liveJobCount = data.filter(job => !isPortalSearchLink(job)).length;
-      const searchLinkCount = data.filter(job => isPortalSearchLink(job)).length;
-      return res.status(201).json({ jobs: data, count: data.length, live_job_count: liveJobCount, search_link_count: searchLinkCount });
+      const liveJobCount = jobsWithScores.filter(job => !isPortalSearchLink(job)).length;
+      const searchLinkCount = jobsWithScores.filter(job => isPortalSearchLink(job)).length;
+      return res.status(201).json({ jobs: jobsWithScores, count: jobsWithScores.length, live_job_count: liveJobCount, search_link_count: searchLinkCount });
     }
 
     return res.status(405).json({ error: 'Method not allowed' });

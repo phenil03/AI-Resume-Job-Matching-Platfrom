@@ -41,7 +41,7 @@ async def match_jobs_endpoint(request: MatchRequest):
         skills = extract_skills(request.resume_text)
         
         # 2. Fetch truly real-time jobs from APIs (RemoteOK, etc.)
-        real_jobs = get_real_time_jobs(skills)
+        real_jobs = get_real_time_jobs(skills, resume_text=request.resume_text)
         
         # 3. Convert objects to dicts for the matcher
         job_dicts = []

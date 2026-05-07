@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
-from routers import resume, jobs, apply
+from routers import resume, jobs, apply, compatibility, api
 from app.jobs.router import router as job_fetcher_router
 import subprocess, sys, os
 from dotenv import load_dotenv
@@ -43,7 +43,9 @@ async def root():
 app.include_router(resume.router)
 app.include_router(jobs.router)
 app.include_router(apply.router)
+app.include_router(compatibility.router)
 app.include_router(job_fetcher_router)
+app.include_router(api.router)
 
 @app.get("/health", tags=["System"])
 async def health_check():
