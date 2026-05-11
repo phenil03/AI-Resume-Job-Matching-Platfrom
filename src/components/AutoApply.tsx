@@ -10,6 +10,11 @@ interface JobMatch {
   match_score: number;
 }
 
+interface SyncJobsResponse {
+  jobs?: JobMatch[];
+  saved_matches?: JobMatch[];
+}
+
 interface ApplyResult {
   job_match_id: number;
   application_id?: number;
@@ -29,13 +34,14 @@ export default function AutoApply({ resumeId, atsScore, onComplete }: Props) {
   const [jobs, setJobs] = useState<JobMatch[]>([]);
   const [selectedJobs, setSelectedJobs] = useState<number[]>([]);
   const [applying, setApplying] = useState(false);
+  const [loadingJobs, setLoadingJobs] = useState(false);
   const [results, setResults] = useState<ApplyResult[]>([]);
   const [applyError, setApplyError] = useState<string>('');
   const canApplyByAts = (atsScore ?? 0) >= 50;
 
   useEffect(() => {
     if (canApplyByAts) {
-      fetchJobs();
+      void fetchJobs();
     } else {
       setJobs([]);
       setSelectedJobs([]);
@@ -43,15 +49,58 @@ export default function AutoApply({ resumeId, atsScore, onComplete }: Props) {
   }, [canApplyByAts, resumeId]);
 
   const fetchJobs = async () => {
+    setLoadingJobs(true);
+    setApplyError('');
     try {
-      const res = await fetch(`${API_BASE}/api/job-matches?resume_id=${resumeId}`);
+      let res = await fetch(`${API_BASE}/api/job-matches?resume_id=${resumeId}`);
+      let data: JobMatch[] | null = null;
+
       if (res.ok) {
-        const data = await res.json();
-        setJobs(Array.isArray(data) ? data : []);
-        setSelectedJobs(Array.isArray(data) ? data.map((j: JobMatch) => j.id) : []);
+        const payload = await res.json();
+        data = Array.isArray(payload) ? payload : [];
       }
+
+      if (!Array.isArray(data) || data.length === 0) {
+        const syncRes = await fetch(`${API_BASE}/api/fetch-real-jobs`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ resume_id: resumeId })
+        });
+
+        if (!syncRes.ok) {
+          const errorPayload = await syncRes.json().catch(() => ({}));
+          throw new Error(errorPayload.error || 'Unable to load or sync job matches right now.');
+        }
+
+        const syncData = (await syncRes.json()) as SyncJobsResponse;
+        const syncedJobs = Array.isArray(syncData.saved_matches)
+          ? syncData.saved_matches
+          : Array.isArray(syncData.jobs)
+            ? syncData.jobs
+            : [];
+
+        if (syncedJobs.length > 0) {
+          data = syncedJobs;
+        } else {
+          res = await fetch(`${API_BASE}/api/job-matches?resume_id=${resumeId}`);
+          if (!res.ok) {
+            throw new Error('Fresh jobs were fetched, but the saved job list could not be loaded.');
+          }
+          const fallbackPayload = await res.json();
+          data = Array.isArray(fallbackPayload) ? fallbackPayload : [];
+        }
+      }
+
+      const normalizedJobs = Array.isArray(data) ? data : [];
+      setJobs(normalizedJobs);
+      setSelectedJobs(normalizedJobs.map((j: JobMatch) => j.id));
     } catch (err) {
       console.error('Fetch error:', err);
+      setJobs([]);
+      setSelectedJobs([]);
+      setApplyError(err instanceof Error ? err.message : 'Unable to load jobs for auto-apply right now.');
+    } finally {
+      setLoadingJobs(false);
     }
   };
 
@@ -135,6 +184,14 @@ export default function AutoApply({ resumeId, atsScore, onComplete }: Props) {
             <p className="mt-2 text-sm text-[#633806]">
               Your current ATS score is {atsScore ?? 0}. Improve the resume in ATS Analysis, then come back to unlock job portal applications.
             </p>
+          </div>
+        ) : loadingJobs ? (
+          <div className="space-y-4">
+            <div className="text-center py-8">
+              <Loader2 className="w-10 h-10 mx-auto mb-4 animate-spin text-[#1D9E75]" />
+              <h3 className="text-xl font-semibold mb-2">Preparing job applications...</h3>
+              <p className="text-[#888888]">Loading saved matches and syncing fresh jobs if needed.</p>
+            </div>
           </div>
         ) : !applying && results.length === 0 ? (
           <div className="space-y-6">

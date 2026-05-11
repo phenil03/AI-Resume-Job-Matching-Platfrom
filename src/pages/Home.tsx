@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { ArrowRight, FileText, Target, Zap, Shield, Sparkles, BarChart3, Briefcase, Bot } from 'lucide-react';
+import { ArrowRight, FileText, Target, Zap, Shield, Sparkles, Briefcase, Bot, Clock, User, CheckCircle } from 'lucide-react';
 
 interface HomeProps {
   onStart: () => void;

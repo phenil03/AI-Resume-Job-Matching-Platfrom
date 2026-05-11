@@ -18,6 +18,15 @@ interface JobMatch {
   domain?: string;
 }
 
+interface FetchRealJobsResponse {
+  jobs?: JobMatch[];
+  saved_matches?: JobMatch[];
+  detected_domain?: string;
+  search_role?: string;
+  live_job_count?: number;
+  search_link_count?: number;
+}
+
 interface Props {
   resumeId: number;
   atsScore: number | null;
@@ -55,22 +64,27 @@ export default function JobMatches({ resumeId, atsScore, onComplete }: Props) {
         throw new Error('Failed to fetch jobs');
       }
 
-      const fetchData = await fetchRes.json();
+      const fetchData = await fetchRes.json() as FetchRealJobsResponse;
       console.log('fetch-real-jobs response:', fetchData);
       setDetectedDomain(fetchData.detected_domain || '');
       setSearchRole(fetchData.search_role || '');
-      const liveCount = fetchData.live_job_count ?? fetchData.jobs?.filter((job: JobMatch) => !job.portal.endsWith('_search')).length ?? 0;
-      const searchCount = fetchData.search_link_count ?? fetchData.jobs?.filter((job: JobMatch) => job.portal.endsWith('_search')).length ?? 0;
+      const normalizedJobs = Array.isArray(fetchData.saved_matches)
+        ? fetchData.saved_matches
+        : Array.isArray(fetchData.jobs)
+          ? fetchData.jobs
+          : [];
+      const liveCount = fetchData.live_job_count ?? normalizedJobs.filter((job: JobMatch) => !job.portal.endsWith('_search')).length ?? 0;
+      const searchCount = fetchData.search_link_count ?? normalizedJobs.filter((job: JobMatch) => job.portal.endsWith('_search')).length ?? 0;
       setFetchStatus(
         liveCount > 0
           ? `Found ${liveCount} live jobs${searchCount > 0 ? ` and ${searchCount} search links` : ''}!`
           : 'No domain-aligned live jobs found right now.'
       );
 
-      const hasLiveFetchJobs = Array.isArray(fetchData.jobs) && fetchData.jobs.length > 0;
+      const hasLiveFetchJobs = normalizedJobs.length > 0;
 
       if (hasLiveFetchJobs) {
-        setMatches(fetchData.jobs);
+        setMatches(normalizedJobs);
       } else {
         setMatches([]);
       }

@@ -199,7 +199,7 @@ export default function Auth({ onSuccess, onCancel }: AuthProps) {
 
               <div className="space-y-4">
                 <button
-                  onClick={handleGoogleSignIn}
+                  onClick={() => handleGoogleSignIn()}
                   disabled={loading}
                   className="flex h-14 w-full items-center justify-center gap-4 rounded-[12px] bg-white shadow-xl shadow-white/5 transition-all hover:bg-slate-50 active:scale-[0.98] disabled:opacity-50"
                 >

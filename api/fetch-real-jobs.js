@@ -93,6 +93,15 @@ const INDIA_PRIORITY_CITIES = [
   'Noida'
 ];
 
+const INDIA_SEARCH_CITIES = [
+  'India',
+  'Bengaluru',
+  'Hyderabad',
+  'Pune',
+  'Mumbai',
+  'Delhi NCR'
+];
+
 const STRICT_FRESH_DAYS = 3;
 const RECENT_FRESH_DAYS = 7;
 const MAX_JOB_AGE_DAYS = 14;
@@ -284,46 +293,55 @@ function isStrictDomainMatch(job, profile) {
 function buildPortalSearchLinks(profile) {
   const primaryRole = normalizeQuery(profile.roleHints?.[0] || profile.searchSkills?.[0] || 'Software Engineer');
   const domainLabel = primaryRole || 'Software Engineer';
-  const searches = [
-    {
-      title: `${domainLabel} jobs on LinkedIn`,
-      company: 'LinkedIn',
-      location: 'India',
-      salary: 'Open search',
-      description: `Open LinkedIn search results for ${domainLabel} jobs in India.`,
-      url: `https://www.linkedin.com/jobs/search/?keywords=${encodeURIComponent(domainLabel)}&location=${encodeURIComponent('India')}`,
-      portal: 'linkedin_search',
-      source: 'LinkedIn Search',
-      job_type: 'Search',
-      match_score: 100
-    },
-    {
-      title: `${domainLabel} jobs on Indeed`,
-      company: 'Indeed',
-      location: 'India',
-      salary: 'Open search',
-      description: `Open Indeed search results for ${domainLabel} jobs in India.`,
-      url: `https://in.indeed.com/jobs?q=${encodeURIComponent(domainLabel)}&l=${encodeURIComponent('India')}`,
-      portal: 'indeed_search',
-      source: 'Indeed Search',
-      job_type: 'Search',
-      match_score: 100
-    },
-    {
-      title: `${domainLabel} jobs on Naukri`,
-      company: 'Naukri',
-      location: 'India',
-      salary: 'Open search',
-      description: `Open Naukri search results for ${domainLabel} jobs in India.`,
-      url: `https://www.naukri.com/${encodeURIComponent(domainLabel.toLowerCase().replace(/\s+/g, '-'))}-jobs-in-india`,
-      portal: 'naukri_search',
-      source: 'Naukri Search',
-      job_type: 'Search',
-      match_score: 100
-    }
-  ];
+  const slugRole = domainLabel.toLowerCase().replace(/\s+/g, '-');
+  const searches = INDIA_SEARCH_CITIES.flatMap((city, index) => {
+    const citySlug = city.toLowerCase().replace(/\s+/g, '-');
+    const citySuffix = city === 'India' ? 'India' : city;
+    const score = Math.max(88, 100 - index);
 
-  return searches;
+    return [
+      {
+        title: `${domainLabel} jobs on LinkedIn`,
+        company: 'LinkedIn',
+        location: citySuffix,
+        salary: 'Open search',
+        description: `Open LinkedIn search results for ${domainLabel} jobs in ${citySuffix}.`,
+        url: `https://www.linkedin.com/jobs/search/?keywords=${encodeURIComponent(domainLabel)}&location=${encodeURIComponent(citySuffix)}`,
+        portal: 'linkedin_search',
+        source: 'LinkedIn Search',
+        job_type: 'Search',
+        match_score: score
+      },
+      {
+        title: `${domainLabel} jobs on Indeed`,
+        company: 'Indeed',
+        location: citySuffix,
+        salary: 'Open search',
+        description: `Open Indeed search results for ${domainLabel} jobs in ${citySuffix}.`,
+        url: `https://in.indeed.com/jobs?q=${encodeURIComponent(domainLabel)}&l=${encodeURIComponent(citySuffix)}`,
+        portal: 'indeed_search',
+        source: 'Indeed Search',
+        job_type: 'Search',
+        match_score: score - 1
+      },
+      {
+        title: `${domainLabel} jobs on Naukri`,
+        company: 'Naukri',
+        location: citySuffix,
+        salary: 'Open search',
+        description: `Open Naukri search results for ${domainLabel} jobs in ${citySuffix}.`,
+        url: city === 'India'
+          ? `https://www.naukri.com/${encodeURIComponent(slugRole)}-jobs-in-india`
+          : `https://www.naukri.com/${encodeURIComponent(slugRole)}-jobs-in-${encodeURIComponent(citySlug)}`,
+        portal: 'naukri_search',
+        source: 'Naukri Search',
+        job_type: 'Search',
+        match_score: score - 2
+      }
+    ];
+  });
+
+  return dedupeJobs(searches);
 }
 
 function isPortalSearchLink(job) {
@@ -656,6 +674,11 @@ async function fetchJobsFromAPIs(profile) {
     });
 
   const searchLinks = buildPortalSearchLinks(profile);
+  const indiaLiveJobs = ranked
+    .filter(job => job.match_score >= 28)
+    .filter(job => isIndiaLocation(job.location) || isIndiaFriendlyRemoteJob(job.location))
+    .filter(job => isFreshJob(job, MAX_JOB_AGE_DAYS))
+    .sort((a, b) => compareJobsByFreshnessAndScore(a, b));
   const broadFallback = dedupeJobs(jobs)
     .filter(job => job.title && job.company && job.url)
     .filter(job => isIndiaLocation(job.location) || isIndiaFriendlyRemoteJob(job.location) || isBroadRemoteJob(job.location) || (job.job_type || '').toLowerCase() === 'remote')
@@ -710,10 +733,25 @@ async function fetchJobsFromAPIs(profile) {
           ? broadFallback
           : globalFallback.length > 0
             ? globalFallback
-            : lastResort
+              : lastResort
   ).slice(0, 60);
 
-  return liveJobs.length > 0 ? liveJobs : searchLinks;
+  if (liveJobs.length === 0) {
+    return searchLinks;
+  }
+
+  if (indiaLiveJobs.length === 0) {
+    return searchLinks.slice(0, 18);
+  }
+
+  if (indiaLiveJobs.length < 5) {
+    return dedupeJobs([
+      ...indiaLiveJobs.slice(0, 5),
+      ...searchLinks.slice(0, 12)
+    ]).slice(0, 18);
+  }
+
+  return liveJobs;
 }
 
 function calculateMatchScore(job, skills) {
@@ -728,6 +766,23 @@ function calculateMatchScore(job, skills) {
   });
 
   return Math.min(100, score);
+}
+
+function normalizeSavedJobMatch(row) {
+  return {
+    id: row.id,
+    job_title: row.job_title,
+    company: row.company,
+    location: row.location,
+    salary: row.salary,
+    match_score: row.match_score,
+    portal: row.portal,
+    job_url: row.job_url,
+    description: row.description,
+    source: row.source,
+    job_type: row.job_type,
+    date_posted: row.date_posted || null
+  };
 }
 
 export default async function handler(req, res) {
@@ -797,9 +852,18 @@ export default async function handler(req, res) {
 
       if (error) throw error;
 
-      const liveJobCount = jobsWithScores.filter(job => !isPortalSearchLink(job)).length;
-      const searchLinkCount = jobsWithScores.filter(job => isPortalSearchLink(job)).length;
-      return res.status(201).json({ jobs: jobsWithScores, count: jobsWithScores.length, live_job_count: liveJobCount, search_link_count: searchLinkCount });
+      const savedMatches = Array.isArray(data) ? data.map(normalizeSavedJobMatch) : [];
+      const liveJobCount = savedMatches.filter(job => !isPortalSearchLink(job)).length;
+      const searchLinkCount = savedMatches.filter(job => isPortalSearchLink(job)).length;
+      return res.status(201).json({
+        jobs: savedMatches,
+        saved_matches: savedMatches,
+        count: savedMatches.length,
+        live_job_count: liveJobCount,
+        search_link_count: searchLinkCount,
+        detected_domain: domain,
+        search_role: profile.roleHints?.[0] || ''
+      });
     }
 
     return res.status(405).json({ error: 'Method not allowed' });

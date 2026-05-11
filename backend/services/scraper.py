@@ -4,8 +4,6 @@ import re
 from datetime import datetime, timezone
 from email.utils import parsedate_to_datetime
 from typing import List
-from urllib.parse import quote_plus
-from xml.etree import ElementTree
 
 import requests
 from bs4 import BeautifulSoup
@@ -140,26 +138,122 @@ def dedupe_and_sort_jobs(jobs: List[AggregatedJob]) -> List[AggregatedJob]:
     )
 
 
-def fetch_arbeitnow_jobs(role: str, location: str) -> List[AggregatedJob]:
+def fetch_jobicy_india_jobs(role: str, location: str) -> List[AggregatedJob]:
     try:
         response = requests.get(
-            "https://www.arbeitnow.com/api/job-board-api",
-            params={"search": role},
+            "https://jobicy.com/api/v2/remote-jobs",
+            params={"geo": "india", "count": 20, "tag": role},
             headers=DEFAULT_HEADERS,
             timeout=REQUEST_TIMEOUT,
         )
         response.raise_for_status()
         payload = response.json()
         jobs = []
-        for item in payload.get("data", []):
+        for item in payload.get("jobs", []):
+            title = item.get("jobTitle", "").strip()
+            company = item.get("companyName", "").strip() or "Unknown Company"
+            source_location = str(item.get("jobGeo") or location or "India").strip()
+            summary = normalize_description(item.get("jobDescription", ""))
+            link = item.get("url", "").strip()
+            searchable = f"{title} {company} {source_location} {summary}".lower()
+            if not matches_role(searchable, role):
+                continue
+            if not matches_location(searchable, location):
+                continue
+            jobs.append(
+                AggregatedJob(
+                    title=title,
+                    company=company,
+                    location=source_location,
+                    job_type=normalize_job_type(item.get("jobType"), source_location, title),
+                    description=summary,
+                    apply_url=link,
+                    date_posted=normalize_date(item.get("pubDate")),
+                    source="Jobicy India",
+                )
+            )
+        return [job for job in jobs if job.title and job.company and job.apply_url]
+    except Exception as exc:
+        print(f"[ERROR] Jobicy India fetch failed: {exc}")
+        return []
+
+
+def fetch_adzuna_india_jobs(role: str, location: str) -> List[AggregatedJob]:
+    app_id = os.environ.get("ADZUNA_APP_ID")
+    api_key = os.environ.get("ADZUNA_API_KEY")
+    if not app_id or not api_key:
+        return []
+
+    try:
+        response = requests.get(
+            "https://api.adzuna.com/v1/api/jobs/in/search/1",
+            params={
+                "app_id": app_id,
+                "app_key": api_key,
+                "results_per_page": 20,
+                "what": role,
+                "where": location,
+                "content-type": "application/json",
+            },
+            headers=DEFAULT_HEADERS,
+            timeout=REQUEST_TIMEOUT,
+        )
+        response.raise_for_status()
+        payload = response.json()
+        jobs = []
+        for item in payload.get("results", []):
+            title = item.get("title", "").strip()
+            company = ((item.get("company") or {}).get("display_name") or "Unknown Company").strip()
+            source_location = ((item.get("location") or {}).get("display_name") or location or "India").strip()
+            summary = normalize_description(item.get("description", ""))
+            searchable = f"{title} {company} {source_location} {summary}".lower()
+            if not matches_role(searchable, role):
+                continue
+            if not matches_location(searchable, location):
+                continue
+            jobs.append(
+                AggregatedJob(
+                    title=title,
+                    company=company,
+                    location=source_location,
+                    job_type=normalize_job_type(item.get("contract_type"), source_location, title),
+                    description=summary,
+                    apply_url=item.get("redirect_url", "").strip(),
+                    date_posted=normalize_date(item.get("created")),
+                    source="Adzuna India",
+                )
+            )
+        return [job for job in jobs if job.title and job.company and job.apply_url]
+    except Exception as exc:
+        print(f"[ERROR] Adzuna India fetch failed: {exc}")
+        return []
+
+
+def fetch_remotive_jobs(role: str, location: str) -> List[AggregatedJob]:
+    try:
+        response = requests.get(
+            "https://remotive.com/api/remote-jobs",
+            headers=DEFAULT_HEADERS,
+            timeout=REQUEST_TIMEOUT,
+        )
+        response.raise_for_status()
+        payload = response.json()
+        jobs = []
+        for item in payload.get("jobs", []):
             title = item.get("title", "").strip()
             company = item.get("company_name", "").strip()
-            raw_location = item.get("location")
-            if isinstance(raw_location, list):
-                normalized_location = ", ".join(part for part in raw_location if part)
-            else:
-                normalized_location = str(raw_location or "Worldwide").strip()
-            searchable = f"{title} {company} {normalized_location} {item.get('description', '')}".lower()
+            candidate_location = str(item.get("candidate_required_location") or "Worldwide").strip()
+            description = normalize_description(item.get("description", ""))
+            searchable = " ".join(
+                [
+                    title,
+                    company,
+                    candidate_location,
+                    str(item.get("category", "")),
+                    " ".join(item.get("tags", []) or []),
+                    description,
+                ]
+            ).lower()
             if not matches_role(searchable, role):
                 continue
             if not matches_location(searchable, location):
@@ -168,64 +262,17 @@ def fetch_arbeitnow_jobs(role: str, location: str) -> List[AggregatedJob]:
                 AggregatedJob(
                     title=title,
                     company=company or "Unknown Company",
-                    location=normalized_location or "Worldwide",
-                    job_type=normalize_job_type(item.get("job_types"), normalized_location, title),
-                    description=normalize_description(item.get("description", "")),
+                    location=candidate_location or "Worldwide",
+                    job_type=normalize_job_type(item.get("job_type"), candidate_location, title),
+                    description=description,
                     apply_url=item.get("url", "").strip(),
-                    date_posted=normalize_date(item.get("created_at")),
-                    source="Arbeitnow",
+                    date_posted=normalize_date(item.get("publication_date")),
+                    source="Remotive",
                 )
             )
         return [job for job in jobs if job.title and job.company and job.apply_url]
     except Exception as exc:
-        print(f"[ERROR] Arbeitnow fetch failed: {exc}")
-        return []
-
-
-
-def parse_indeed_title(raw_title: str) -> tuple[str, str, str]:
-    cleaned = (raw_title or "").replace(" - Indeed.com", "").strip()
-    parts = [part.strip() for part in cleaned.split(" - ") if part.strip()]
-    if len(parts) >= 3:
-        return parts[0], parts[1], " - ".join(parts[2:])
-    if len(parts) == 2:
-        return parts[0], parts[1], ""
-    return cleaned, "Unknown Company", ""
-
-
-def fetch_indeed_rss_jobs(role: str, location: str) -> List[AggregatedJob]:
-    try:
-        rss_url = f"https://in.indeed.com/rss?q={quote_plus(role)}&l={quote_plus(location)}"
-        response = requests.get(rss_url, headers=DEFAULT_HEADERS, timeout=REQUEST_TIMEOUT)
-        response.raise_for_status()
-        root = ElementTree.fromstring(response.text)
-        jobs = []
-        for item in root.findall("./channel/item"):
-            raw_title = item.findtext("title", default="")
-            title, company, title_location = parse_indeed_title(raw_title)
-            description_html = item.findtext("description", default="")
-            summary = normalize_description(description_html)
-            location_text = title_location or location
-            searchable = f"{title} {company} {location_text} {summary}".lower()
-            if not matches_role(searchable, role):
-                continue
-            if not matches_location(searchable, location):
-                continue
-            jobs.append(
-                AggregatedJob(
-                    title=title.strip(),
-                    company=company.strip() or "Unknown Company",
-                    location=location_text.strip() or location,
-                    job_type=normalize_job_type(summary, location_text, title),
-                    description=summary,
-                    apply_url=item.findtext("link", default="").strip(),
-                    date_posted=normalize_date(item.findtext("pubDate")),
-                    source="Indeed RSS",
-                )
-            )
-        return [job for job in jobs if job.title and job.company and job.apply_url]
-    except Exception as exc:
-        print(f"[ERROR] Indeed RSS fetch failed: {exc}")
+        print(f"[ERROR] Remotive fetch failed: {exc}")
         return []
 
 
@@ -233,8 +280,9 @@ def aggregate_jobs(role: str, location: str = "India") -> List[AggregatedJob]:
     normalized_role = (role or "").strip() or "Software Engineer"
     normalized_location = (location or "").strip() or "India"
     jobs: List[AggregatedJob] = []
-    jobs.extend(fetch_arbeitnow_jobs(normalized_role, normalized_location))
-    jobs.extend(fetch_indeed_rss_jobs(normalized_role, normalized_location))
+    jobs.extend(fetch_jobicy_india_jobs(normalized_role, normalized_location))
+    jobs.extend(fetch_adzuna_india_jobs(normalized_role, normalized_location))
+    jobs.extend(fetch_remotive_jobs(normalized_role, normalized_location))
     return dedupe_and_sort_jobs(jobs)
 
 

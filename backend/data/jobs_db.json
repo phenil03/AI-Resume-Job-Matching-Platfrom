@@ -1,488 +1,82 @@
 [
   {
-    "id": 1,
-    "title": "Solution Expert",
-    "company": "360Learning",
-    "location": "Remote",
-    "salary": "$0 - $0 USD",
-    "job_url": "https://remoteOK.com/remote-jobs/remote-solution-expert-360learning-1131192",
-    "description": "<span style=\"font-size: 16px;\">Our Solution Expert team plays a key role in supporting strategic customers in RUN phase, by acting as trusted advisors on complex use cases. Working closely with Sales, Product, and Customer Success, they analyze advanced client needs, challenge existing setups, and translate requirements into scalable solutions within the 360Learning platform. </span>\n&nbsp;\n<span style=\"font-size: 16px;\">You will manage a portfolio of customers throughout their lifecycle to drive product adoption and deliver tailored solutions beyond standard product capabilities. </span>\n&nbsp;\n<span style=\"font-size: 16px;\">These large and strategic accounts have already deployed the platform and have a strong level of autonomy. They rely on your technical and functional expertise to lead complex integrations (APIs, flat files, third-party tools), redesign platform architecture, run solution audits, and provide high-level recommendations to maximize bus"
-  },
-  {
-    "id": 2,
-    "title": "VP Sales",
-    "company": "Unlimit",
-    "location": "Remote",
-    "salary": "$0 - $0 USD",
-    "job_url": "https://remoteOK.com/remote-jobs/remote-vp-sales-unlimit-1131191",
-    "description": "\n<p style=\"margin-top: 12pt; margin-bottom: 12pt;\"><strong><span style=\"font-size: 11pt; font-family: Arial, sans-serif;\">About Unlimit</span></strong>\n<p style=\"margin-top: 12pt; margin-bottom: 12pt;\"><span style=\"font-size: 11pt; font-family: Arial, sans-serif;\">Unlimit is the global financial infrastructure for the borderless agentic economy. Designed to bridge the gap between fragmented local markets and the future of autonomous commerce, Unlimit provides the programmable operating layer for the world\u00e2\u0080\u0099s most ambitious businesses.</span>\n<p style=\"margin-top: 12pt; margin-bottom: 12pt;\"><span style=\"font-size: 11pt; font-family: Arial, sans-serif;\">Through an integrated technology stack, the platform unifies global payment acceptance, programmable financial accounts, and digital asset rails into a singular financial layer. By mapping hyper-local payment ecosystems directly into its architecture, Unlimit enables businesses to move value and settle transactions instan"
-  },
-  {
-    "id": 3,
-    "title": "NEOWIZ Santa Monica Localization Manager",
-    "company": "Neowiz",
-    "location": "Remote",
-    "salary": "$0 - $0 USD",
-    "job_url": "https://remoteOK.com/remote-jobs/remote-neowiz-santa-monica-localization-manager-neowiz-1131190",
-    "description": "<strong><span style=\"font-size: 18px;\">About NEOWIZ</span></strong>\n&nbsp;\n<strong><span style=\"font-size: 18px;\">The Magic That Brings Joy to the World</span></strong>\n&nbsp;\n<span style=\"font-size: 16px;\">At NEOWIZ, we build bold, memorable games that players love\u00e2\u0080\u0094and remember. We move fast, stay curious, and care deeply about doing great work.</span>\n&nbsp;\n<span style=\"font-size: 16px;\">We're not chasing one-off hits. We invest in strong ideas, sharp execution, and teams who take ownership. The goal? Build great games\u00e2\u0080\u0094and then do it again, even better.</span>\n&nbsp;\n<span style=\"font-size: 16px;\">Across PC, console, and mobile, we\u00e2\u0080\u0099re creating genre-defining experiences that push boundaries and deliver real joy. If that sounds like your kind of mission, we\u00e2\u0080\u0099d love to meet you.</span>\n&nbsp;\n<span style=\"font-size: 16px;\">Be part of something bold and let\u00e2\u0080\u0099s build what\u00e2\u0080\u0099s next.</span><br><"
-  },
-  {
-    "id": 4,
-    "title": "Executive Director Regulatory Affairs",
-    "company": "Kyverna Therapeutics",
-    "location": "Remote",
-    "salary": "$0 - $0 USD",
-    "job_url": "https://remoteOK.com/remote-jobs/remote-executive-director-regulatory-affairs-kyverna-therapeutics-1131189",
-    "description": "\n<p style=\"margin: 0in; font-size: 12pt; font-family: Aptos, sans-serif;\"><span style=\"font-size: 11.0pt;\">Kyverna Therapeutics is a patient-centered, clinical-stage biopharmaceutical company developing cell therapies for patients suffering from autoimmune diseases. Guided by our core values, Stay True to Why, Collaborate to Accelerate, Lead with Clarity, Boldly Innovative, and Own the Outcome, we are committed to transforming the future of treatment for autoimmune disease. Join us at the forefront of cell therapy innovation and help redefine what\u00e2\u0080\u0099s possible.</span>\n<p style=\"margin: 0in; line-height: normal; font-size: 12pt; font-family: Aptos, sans-serif;\">&nbsp;\n<p style=\"margin: 0in; line-height: normal; font-size: 12pt; font-family: Aptos, sans-serif;\"><strong><span style=\"font-size: 11.0pt;\">Title:</span></strong><span style=\"font-size: 11.0pt;\">&nbsp;Executive Director, Regulatory Affairs</span>\n<p style=\"margin: 0in; line-height: normal; font-size: 12pt; fo"
-  },
-  {
-    "id": 5,
-    "title": "AI Senior Fullstack Engineer",
-    "company": "Contentsquare",
-    "location": "Remote",
-    "salary": "$0 - $0 USD",
-    "job_url": "https://remoteOK.com/remote-jobs/remote-ai-senior-fullstack-engineer-contentsquare-1131188",
-    "description": "<span style=\"font-size: 16px\">Contentsquare is the all-in-one experience intelligence platform designed to be easily used by anyone who cares about digital journeys. With our flexible and scalable platform, organizations quickly get a deep understanding of their customers\u00e2\u0080\u0099 whole online journey.</span><br><span style=\"font-size: 16px\">We are a global leader in the experience analytics space, with a growing presence across 15 offices worldwide. We\u00e2\u0080\u0099re here to stay\u00e2\u0080\u0094and we\u00e2\u0080\u0099re looking for team members who are excited to drive impact and help us scale even further.</span><br><span style=\"font-size: 16px\">Our aim is to create an inclusive workplace where everyone learns and succeeds. Contentsquare has built a community of individuals who are daring, understanding, and deliberate. We invite you to join us in making the complex simpler\u00e2\u0080\u0094for our customers, their customers, and each other.</span><br><i><span style=\"font-size: 16px\">Important no"
-  },
-  {
-    "id": 6,
-    "title": "Sales Development Representative",
-    "company": "Jeeves",
-    "location": "Remote",
-    "salary": "$0 - $0 USD",
-    "job_url": "https://remoteOK.com/remote-jobs/remote-sales-development-representative-jeeves-1131187",
-    "description": "<span style=\"font-size: 16px;\">Jeeves is a groundbreaking financial operating system built for global businesses that provides corporate cards, cross-border payments, and spend management software within one unified platform. The company operates across 20+ countries including Brazil, Canada, Colombia, Mexico, the United Kingdom, across Europe, and the United States, and serves over 5,000 clients ranging from venture-backed startups to SMBs around the world. With a mission to empower businesses with more efficient and cost-effective financial solutions worldwide, Jeeves combines cutting-edge financial technology with exceptional team expertise to transform the business financial landscape. Jeeves has been recognized as one of The Information's 50 Most Promising Startups in 2023, as well as a Y Combinator Top Company 2021-2023 and won \u00e2\u0080\u009cFintech of the Year\" at the European Fintech Awards.</span><br><span style=\"font-size: 16px;\">Since graduating from Y Combinator in 20"
-  },
-  {
-    "id": 7,
-    "title": "Deputy Director Non entive Programs",
-    "company": "CALSTART",
-    "location": "Remote",
-    "salary": "$0 - $0 USD",
-    "job_url": "https://remoteOK.com/remote-jobs/remote-deputy-director-non-entive-programs-calstart-1131186",
-    "description": "<span style=\"font-size: 32px\">Please be aware of recruiting scams! </span><br><b style=\"font-size: 18px\">All legitimate communication from our recruitment team will come from an official <a href=\"http://calstart.org\">calstart.org</a> email address via email, we will not text you about a role you have not applied to or shown interest in. We will not perform any interviews via text or Zoom chat.<br><br><b style=\"font-size: 18px\">CALSTART does not ask for any fees or personal information such as social security numbers or bank details during the recruitment process.<br><br><b style=\"font-size: 18px\">About Us<span style=\"font-size: 18px\">:</span><br><span style=\"font-size: 16px\">CALSTART is a mission-driven industry organization focused on transportation decarbonization and clean air for all.</span><br><span style=\"font-size: 16px\">For over 30 years, it\u00e2\u0080\u0099s been CALSTART\u00e2\u0080\u0099s mission to"
-  },
-  {
-    "id": 8,
-    "title": "Backend Engineer Rome",
-    "company": "Air Apps",
-    "location": "Remote",
-    "salary": "$52000 - $65000 USD",
-    "job_url": "https://remoteOK.com/remote-jobs/remote-backend-engineer-rome-air-apps-1131185",
-    "description": "<h1>About Air Apps</h1><p style=\"min-height:1.5em\">At Air Apps, we believe in thinking bigger\u00e2\u0080\u0094and moving faster. We\u00e2\u0080\u0099re a family-founded company on a mission to create the world\u00e2\u0080\u0099s first AI-powered Personal &amp; Entrepreneurial Resource Planner (PRP), and we need your passion and ambition to help us change how people plan, work, and live. Born in Lisbon, Portugal in 2018\u00e2\u0080\u0094and now with offices in both Lisbon and San Francisco\u00e2\u0080\u0094we\u00e2\u0080\u0099ve remained self-funded while reaching over 100 million downloads worldwide.<p style=\"min-height:1.5em\">Our long-term focus drives us to challenge the status quo every day, pushing the boundaries of AI-driven solutions that truly make a difference. Here, you\u00e2\u0080\u0099ll be a creative force, shaping products that empower people across the globe.<p style=\"min-height:1.5em\">Join us on this journey to redefine resource management\u00e2\u0080\u0094and change lives along the way.<p style=\"min-height:1.5em\"><h1>The Role</h1><p style=\"min-height:1.5em\">As a Backend "
-  },
-  {
-    "id": 9,
-    "title": "Operations Associate Payment Integrity",
-    "company": "Clover Health",
-    "location": "Remote",
-    "salary": "$0 - $0 USD",
-    "job_url": "https://remoteOK.com/remote-jobs/remote-operations-associate-payment-integrity-clover-health-1131182",
-    "description": "<em>Clover is reinventing health insurance by working to keep people healthier.</em>\nAt Clover Health, we are committed to providing high-quality, affordable, and easy-to-understand healthcare plans for America's seniors. We prioritize preventive care while leveraging data and technology through the Clover Assistant, a powerful tool that helps physicians make informed health recommendations. By giving doctors a holistic view of each member's complete health history, we ensure better care at a lower cost\u00e2\u0080\u0094delivering the highest value to those who need it most.\nThe Payment Integrity team is a motivated, collaborative team sitting at the intersection of Clover's provider relationship operations, data infrastructure, and software. The Payment Integrity team ensures that Clover pays claims in a fair, transparent, compliant, and medically justified manner. Come join us as we discover new opportunities to improve the financial health of Clover while strengthening provider re"
-  },
-  {
-    "id": 10,
-    "title": "Nurse Care Manager Transitions of Care",
-    "company": "Evergreen Nephrology",
-    "location": "Remote",
-    "salary": "$0 - $0 USD",
-    "job_url": "https://remoteOK.com/remote-jobs/remote-nurse-care-manager-transitions-of-care-evergreen-nephrology-1131181",
-    "description": "<div><strong>Who We Are</strong>\nEvergreen Nephrology partners with nephrologists to transform kidney care through a value-based, person-centered, holistic, and comprehensive approach to kidney care. We believe patients living with kidney disease deserve the best care. We are committed to improving patient outcomes and improving quality of life by delaying disease progression, shifting care to the home, and accelerating kidney transplants.\nWe help nephrologists focus on the right patients at the right time across the full care spectrum. We do this by providing them with the best-in-class interdisciplinary clinical resources, analytical insight and tools, and services to patients. We listen to the needs of our patients, our employees, and our client partners, continually working to push beyond the status quo in which the care system manages patients today.\n<strong>Who You Are</strong>\nYou are devoted, compassionate, and enjoy being on the front lines of he"
-  },
-  {
-    "id": 11,
-    "title": "Content Compliance Manager OTC Supplements and Cosmetics",
-    "company": "Strive Pharmacy",
-    "location": "Remote",
-    "salary": "$0 - $0 USD",
-    "job_url": "https://remoteOK.com/remote-jobs/remote-content-compliance-manager-otc-supplements-and-cosmetics-strive-pharmacy-1131180",
-    "description": "<div><h3><strong>Company Overview</strong></h3>\nBefore we opened Strive Pharmacy we were unsatisfied with the current state of the pharmaceutical industry. Most of the current pharmaceuticals only offer a one size fits all approach and often come with unwanted and potentially dangerous side effects. We found that through compounding we can offer a much more personalized solution to medicine.\nThrough this we have been able to help patients get the results they are seeking for their personal needs. After years of working for corporate chains we took the risk and opened Strive Pharmacy. We are dedicated to providing a better experience for each customer and clinic that we work with. Come see the Strive difference.\n<h3><strong>Our Mission</strong></h3>\n<strong data-stringify-type=\"bold\">We're flipping the script with personal medicine. </strong>We strive to interrupt an industry that has been closed to personalized care, accessibility, and nuance for too long. We strive to"
-  },
-  {
-    "id": 12,
-    "title": "Senior Solution Consultant",
-    "company": "Highspot",
-    "location": "Remote",
-    "salary": "$0 - $0 USD",
-    "job_url": "https://remoteOK.com/remote-jobs/remote-senior-solution-consultant-highspot-1131179",
-    "description": "<b style=\"font-size: 18px\">About HighspotHighspot is pioneering the category that is fundamentally changing the way companies increase sales productivity. On a mission to transform the way millions of people work with sales enablement, Highspot is committed to building breakthrough software with a spark of magic. We believe a great place to work is about more than the work \u00e2\u0080\u0093 it\u00e2\u0080\u0099s about what the company stands for, and how it authentically represents its values in the real world. To this end, we have put intentional focus on creating equitable workspaces for each of our employees. Our goal is to create a culture where everyone feels a deep sense of belonging and is empowered to be an agent of change, with the ability to transform themselves, their workplace, and their world. <br><h3>About the Role</h3>\n<br>Highspot is seeking to hire a Senior Solution Consultant to help grow our North American operations. The highly experienced Solution Consultant will ha"
-  },
-  {
-    "id": 13,
-    "title": "Technical Support Manager",
-    "company": "Promenade",
-    "location": "Remote",
-    "salary": "$0 - $0 USD",
-    "job_url": "https://remoteOK.com/remote-jobs/remote-technical-support-manager-promenade-1131178",
-    "description": "\nPromenade is looking for a Technical Support Manager to lead a team responsible for high-touch escalations across our software suite. This is a player-coach role for someone who can move comfortably between operational leadership, deep technical troubleshooting, hands-on data work, and customer conversations.\nThe ideal candidate is equally comfortable meeting with a client to resolve issues, partnering with leadership to implement meaningful metrics and improve how teams work together, using New Relic to investigate application issues and working in Excel to validate and clean data for import.\n\\n<br>About the Team<div>\nThe Technical Support team at Promenade provides advanced troubleshooting and escalated support across our application suite, including Point of Sale, ecommerce, hardware, and third-party integrations.\nThe team partners closely with Customer Success, Implementation, Product Marketing, and Engineering to resolve "
-  },
-  {
-    "id": 14,
-    "title": "Creative Director",
-    "company": "Runway",
-    "location": "Remote",
-    "salary": "$250000 - $290000 USD",
-    "job_url": "https://remoteOK.com/remote-jobs/remote-creative-director-runway-1131177",
-    "description": "<p style=\"min-height:1.5em\">We are building AI to simulate the world through merging art and science.<br /><br />We believe that world models are at the frontier of progress in artificial intelligence. Language models alone won\u00e2\u0080\u0099t solve the world\u00e2\u0080\u0099s hardest problems \u00e2\u0080\u0093 robotics, disease, scientific discovery. Real progress requires models that experience the world and learn from their mistakes, the same way that humans do. And this kind of trial and error can be massively accelerated when done in simulation, rather than in the real world.<br /><br />World models offer the most clear path to general-purpose simulation, changing how stories are told, how scientific progress is made and how the next frontiers of humanity are reached.<p style=\"min-height:1.5em\"><p style=\"min-height:1.5em\">Our team consists of creative, open minded, caring and ambitious people who are determined to change the world. We aspire to continuously build impossible things and our ability to do so relies"
-  },
-  {
-    "id": 15,
-    "title": "Spanish Bilingual Certified Pharmacy Technician Refill & Medication Adherence",
-    "company": "Shields Health Solutions",
-    "location": "Remote",
-    "salary": "$0 - $0 USD",
-    "job_url": "https://remoteOK.com/remote-jobs/remote-spanish-bilingual-certified-pharmacy-technician-refill-medication-adherence-shields-health-solutions-1131176",
-    "description": "<div><h2><strong>Bilingual (Spanish) Patient Engagement Specialist (Remote)</strong></h2>\n<strong>Language Requirement:</strong> Fluent in English and Spanish (verbal and written)\n<strong>Location:</strong> Remote (U.S.)\n<h3><strong>Make a Direct Impact on Patient Care\u00e2\u0080\u0094From Home</strong></h3>\nAre you a <strong>certified pharmacy technician</strong> who is passionate about patient advocacy, medication access, and culturally competent care? Do you thrive in a fast-paced, service-driven environment and enjoy proactive patient outreach?\nAs a <strong>Bilingual (Spanish) Patient Engagement Specialist</strong>, you will play a vital role in supporting patients throughout their medication journey. You'll act as a trusted liaison between patients, pharmacists, clinicians, payors, and health system partners\u00e2\u0080\u0094ensuring timely refills, resolving pharmacy claims issues, and delivering compassionate, high-quality service in <strong>both English and Spanish</strong>.\n"
-  },
-  {
-    "id": 16,
-    "title": "Manager Retention",
-    "company": "Evolve",
-    "location": "Remote",
-    "salary": "$0 - $0 USD",
-    "job_url": "https://remoteOK.com/remote-jobs/remote-manager-retention-evolve-1131175",
-    "description": "At Evolve, we're on a mission to make vacation rental easy for everyone. Our high-performing, customer-obsessed team runs on curiosity, communication, and accountability\u00e2\u0080\u0094working together to create exceptional experiences for our owners and guests. Whether solving big challenges, delivering outstanding results, or celebrating wins, we approach every day with purpose and passion. If you're ready to join a mission-driven company where every teammate has the opportunity to thrive, Evolve might just be the place for you.\n\nWhy this role\nAs Manager, Retention, you will lead an established team of 8-12 individual contributors dedicated to maximizing the value of our existing owner base. You'll oversee a high-performing group focused on engaging at-risk owners, understanding their challenges, resolving pain points, and re-establishing their confidence in Evolve's services. Working closely with senior leadership, you'll drive continuous improvement across retention strategy, team performance, "
-  },
-  {
-    "id": 17,
-    "title": "Engineering Manager",
-    "company": "Calendly",
-    "location": "Remote",
-    "salary": "$0 - $0 USD",
-    "job_url": "https://remoteOK.com/remote-jobs/remote-engineering-manager-calendly-1131174",
-    "description": "What\u00e2\u0080\u0099s in it for you? Ready to make a serious impact? Millions of people already rely on Calendly, and we\u00e2\u0080\u0099re still in the midst of exciting product growth \u00e2\u0080\u0094 it\u00e2\u0080\u0099s a fantastic time to join us. Everything you\u00e2\u0080\u0099ll work on here will accelerate your career to the next level. If you want to learn, grow, and do the best work of your life alongside the best people you\u00e2\u0080\u0099ve ever worked with, then we hope you\u00e2\u0080\u0099ll consider allowing Calendly to be a part of your professional journey. About the team & opportunity We are looking for a hands-on Engineering Manager who combines people leadership with a strong background in technical execution and a product mindset. You will work directly with our Senior Director of Engineering, partnering closely with product, design, data, security, and go\u00e2\u0080\u0091to\u00e2\u0080\u0091market stakeholders to define and deliver the roadmap for new Scheduling products. What you'll bring: A track record of leading teams that build and operate highly-available products at scale. A coa"
-  },
-  {
-    "id": 18,
-    "title": "Senior React Native Developer",
-    "company": "Headway",
-    "location": "Remote",
-    "salary": "$130000 - $200000 USD",
-    "job_url": "https://remoteOK.com/remote-jobs/remote-senior-react-native-developer-headway-1131173",
-    "description": "<h2>About Headway \u00c2\u00a0<br /></h2>Founded in 2015, <a href=\"https://headway.io/careers\">Headway</a> was born out of a passion to bring entrepreneurial ideas to market and keep them there. We work holistically with our client partners as a true extension of their product team, not just as an execution arm of their business. If we see something broken, whether that's a workflow, a marketing or messaging strategy, or a needless feature, we speak up, and our clients trust us to help them fix it.<br />Because we're more than just designers, developers, and product strategists, we achieve results that bring successful long-term partnerships and trusted referrals. We help entrepreneurs and corporate innovators\u00c2\u00a0<em>build a business</em> \u00e2\u0080\u0095 not just an app. Our approach to validating ideas and building sustainable business models has been a catalyst for our growth. This approach, coupled with realistic and incremental software releases, results in a friendly, fun, and collaborative atm"
-  },
-  {
-    "id": 19,
-    "title": "Global Data Partnership Director",
-    "company": "Insider One",
-    "location": "Remote",
-    "salary": "$0 - $0 USD",
-    "job_url": "https://remoteOK.com/remote-jobs/remote-global-data-partnership-director-insider-one-1131171",
-    "description": "<span style=\"font-size: 16px\">Before jumping into all the information about the role and what you can bring to the table, let us introduce ourselves real quick.</span><br><span style=\"font-size: 16px\">About us</span><br><span style=\"font-size: 16px\">Insider One is the</span><span style=\"font-size: 16px\"> #1 platform </span><span style=\"font-size: 16px\">that brings everything marketing and customer engagement teams need in one place so they can reach their peak potential and </span><span style=\"font-size: 16px\">become unstoppable.&nbsp;</span><br><span style=\"font-size: 16px\">Our story began with six desks and a vision to create a single platform to make industry-first technologies and emerging channels accessible to marketers worldwide. Today, Insider One is powered </span><span style=\"font-size: 16px\">by 1,500+ team members representing 50+ nationalities across 30+ offices</span><span style=\"font-size: 16px\">.&nb"
-  },
-  {
-    "id": 20,
-    "title": "PR Social Media Intern",
-    "company": "Sezzle",
-    "location": "Remote",
-    "salary": "$0 - $0 USD",
-    "job_url": "https://remoteOK.com/remote-jobs/remote-pr-social-media-intern-sezzle-1131170",
-    "description": "<p class=\"p1\"><strong>About Sezzle:</strong>\n<p class=\"p1\">Sezzle is a cutting-edge fintech company dedicated to financially empowering the next generation. With only one in three millennials owning a credit card and the majority lacking their desired credit scores, Sezzle addresses these challenges through a payment platform that offers interest-free installment plans at online stores. By increasing consumers' purchasing power, Sezzle drives sales and basket sizes for thousands of eCommerce merchants that it partners with.\n<p class=\"p1\"><strong>About the Role:</strong>\n<p class=\"p1\">We are seeking a talented and motivated PR & Social Media Intern who is best in class with a high IQ plus a high EQ. This role presents an exciting opportunity to thrive in a dynamic, fast-paced environment within a rapidly growing team, with abundant prospects for career advancement.\u00c2\u00a0\nAs a PR & Social Media Intern, you will play a critical support role in building and amplifying Sezzle"
-  },
-  {
-    "id": 21,
-    "title": "Senior Software Engineer Cloud Platform",
-    "company": "Signifyd",
-    "location": "Remote",
-    "salary": "$0 - $0 USD",
-    "job_url": "https://remoteOK.com/remote-jobs/remote-senior-software-engineer-cloud-platform-signifyd-1131169",
-    "description": "At Signifyd, we help merchants confidently grow their businesses by building trusted relationships with their customers. Our advanced technology, combined with a team genuinely invested in our clients' success, creates frictionless shopping experiences, approving more good orders, protecting revenue, and keeping customers happy.\n\nTrusted by thousands of leading merchants across more than 100 countries, we securely process billions of transactions each year. Our people are the heart of everything we do, driving our mission forward with commitment, empathy, and creativity. Join us on our mission to empower fearless commerce by helping online retailers provide superior customer experiences and eliminate fraud. Learn about our company values here!\n\nDepartment: Engineering \n\nThe Engineering organisation at Signifyd is at the forefront of building cutting-edge solutions that protect and empower global commerce. We pride ourselves on delivering highly scalable, robust systems that evolve with"
-  },
-  {
-    "id": 22,
-    "title": "Senior Compliance Manager",
-    "company": "Donorbox",
-    "location": "Remote",
-    "salary": "$0 - $0 USD",
-    "job_url": "https://remoteOK.com/remote-jobs/remote-senior-compliance-manager-donorbox-1131168",
-    "description": "<div><h2><strong>About Donorbox</strong></h2>\nDonorbox is a leading fundraising platform and donor management system for nonprofit organizations. Our mission is to accelerate positive impact worldwide by helping nonprofits become highly effective at raising funds and managing their supporter base. Since 2014, we have powered more than 100,000 global organizations to raise over $3B in donations. \u00f0\u009f\u009a\u0080\nOur fast-growing company is profitable and bootstrapped with a healthy run rate. We have a fully distributed and diverse 150-person team based in 16+ states and 23+ countries. In 2026, Donorbox was named by Built In as one of the Best Places to Work in Washington, DC.\n\u00f0\u009f\u008f\u0085 Donorbox is rated the #1 software for fundraising, donor management, and nonprofit payment on G2 based on hundreds of verified customer reviews \u00e2\u0080\u0094 a reflection of the care our team puts into building products that nonprofits trust.\n<h2><strong>The Role</strong></h2>\nAs the Senior Compliance Manage"
-  },
-  {
-    "id": 23,
-    "title": "Frontend Developer Vue.js",
-    "company": "Insider One",
-    "location": "Remote",
-    "salary": "$0 - $0 USD",
-    "job_url": "https://remoteOK.com/remote-jobs/remote-frontend-developer-vue-js-insider-one-1131167",
-    "description": "<span style=\"font-size: 16px\">Before jumping into all the information about the role and what you can bring to the table, let us introduce ourselves real quick.</span><br><span style=\"font-size: 16px\">About us</span><br><span style=\"font-size: 16px\">Insider One is the</span><span style=\"font-size: 16px\"> #1 platform </span><span style=\"font-size: 16px\">that brings everything marketing and customer engagement teams need in one place so they can reach their peak potential and </span><span style=\"font-size: 16px\">become unstoppable.&nbsp;</span><br><span style=\"font-size: 16px\">Our story began with six desks and a vision to create a single platform to make industry-first technologies and emerging channels accessible to marketers worldwide. Today, Insider One is powered </span><span style=\"font-size: 16px\">by 1,500+ team members representing 50+ nationalities across 30+ offices</span><span style=\"font-size: 16px\">.&nb"
-  },
-  {
-    "id": 24,
-    "title": "Freelance Senior Full Stack Software Architect and Collateral Management Specialist",
-    "company": "WISE INTEGRATION",
-    "location": "Remote",
-    "salary": "$0 - $0 USD",
-    "job_url": "https://remoteOK.com/remote-jobs/remote-freelance-senior-full-stack-software-architect-and-collateral-management-specialist-wise-integration-1131166",
-    "description": "\nOn behalf of our client, Danske Group IT, we are looking for a Freelance Senior Full Stack Software Architect and a Collateral Management Specialist who will work on the Algo Collateral project. The candidate will work in Collateral Management, with extensive experience in .NET, domain architecture, DevOps, and AI on a senior level.\n<strong>Responsibilities</strong>\nGeneral Responsible for Algo Collateral Architecture and DevOps &amp; AI CoE trajectory and implementation for LC&amp;I.\n<strong>Key Responsibilities:</strong>\n\u00e2\u0080\u00a2 Drive feature development &amp; support end-2-end\n\u00e2\u0080\u00a2 Engage with business stakeholders, other squads, and tribes\n\u00e2\u0080\u00a2 Mentor squad members\n\u00e2\u0080\u00a2 Drive code quality improvements\n\u00e2\u0080\u00a2 Improve DevOps, monitoring\n\u00e2\u0080\u00a2 Drive down IT-run\n<strong>Requirements:</strong>\n\u00e2\u0080\u00a2 Extensive Experience in Risk, Derivatives &amp; Collateral Management.\n\u00e2\u0080\u00a2 Experienced in .NET, domain archit"
-  },
-  {
-    "id": 25,
-    "title": "Senior Software Engineer App Infra",
-    "company": "Ocrolus Inc.",
-    "location": "Remote",
-    "salary": "$0 - $0 USD",
-    "job_url": "https://remoteOK.com/remote-jobs/remote-senior-software-engineer-app-infra-ocrolus-inc-1131164",
-    "description": "Come build at the intersection of AI and fintech. At Ocrolus, we're on a mission to help lenders automate workflows with confidence\u00e2\u0080\u0094streamlining how financial institutions evaluate borrowers and enabling faster, more accurate lending decisions.\n\nOur AI workflow and analytics platform for lenders is trusted at scale, processing nearly one million credit applications every month across small business, mortgage, and consumer lending. By integrating state-of-the-art open- and closed-source AI models with our human-in-the-loop verification engine, Ocrolus captures data from financial documents with over 99% accuracy. Thanks to our advanced fraud detection and comprehensive cash flow and income analytics, our customers achieve greater efficiency in risk management, and provide expanded access to credit\u00e2\u0080\u0094ultimately creating a more inclusive financial system.\n\nTrusted by more than 400 customers\u00e2\u0080\u0094including industry leaders like Better Mortgage, Brex, Enova, Nova Credit, PayPal, Plaid, SoFi,"
-  },
-  {
-    "id": 26,
-    "title": "Crypto Trader",
-    "company": "Fox GLobal Assets",
-    "location": "Remote",
-    "salary": "$40000 - $60000 USD",
-    "job_url": "https://remoteOK.com/remote-jobs/remote-crypto-trader-fox-global-assets-1131163",
-    "description": "Fox Global is an international company operating at the intersection of digital assets, market intelligence, and data-driven trading strategies. Our focus is on building a strong team of professionals who want to gain real-world experience in financial markets and develop practical trading expertise.We are currently opening a Crypto Trader position for individuals who are starting their professional path and are interested in market analysis, trading and data-driven decision making.This role combines independent trading activity with structured guidance and mentorship from experienced market specialists. We don't have strict KPI requirements, and our work is aimed at training and improving trading skills in the real cryptocurrency market. No prior professional background is required \u00e2\u0080\u0094 full training is provided.<strong>Key Responsibilities</strong><br /><ul><li>Execute trades across digital asset markets following established strategies and risk guidelines."
-  },
-  {
-    "id": 27,
-    "title": "UI UX Designer UK",
-    "company": "Bjak ",
-    "location": "Remote",
-    "salary": "$0 - $0 USD",
-    "job_url": "https://remoteOK.com/remote-jobs/remote-ui-ux-designer-uk-bjak-1131158",
-    "description": "<h1><strong>UI/UX Designer \u00e2\u0080\u0093 Craft Intuitive, High-Impact Mobile Experiences (London / Remote)</strong><br /></h1><p style=\"min-height:1.5em\"><strong>About BJAK</strong><p style=\"min-height:1.5em\">BJAK is Southeast Asia\u00e2\u0080\u0099s largest digital insurance and financial services platform. Headquartered in Malaysia with operations in Thailand, Taiwan, and Japan, we help millions access affordable, transparent, and simplified financial products through <a target=\"_blank\" rel=\"noopener noreferrer nofollow\" href=\"http://Bjak.com\">Bjak.com</a>.<p style=\"min-height:1.5em\">Our proprietary technologies\u00e2\u0080\u0094from custom APIs to AI-powered engines\u00e2\u0080\u0094make complex services like insurance and investments accessible, intuitive, and fast.<p style=\"min-height:1.5em\"><strong>Join us from London (remote-friendly) and help shape the mobile experience for millions of users.</strong><br /><p style=\"min-height:1.5em\"><strong>Why This Role Matters</strong><ul style=\"min-height:1.5em\"><li><p style"
-  },
-  {
-    "id": 28,
-    "title": "Aprio PH People Operations Coordinator",
-    "company": "Aprio",
-    "location": "Remote",
-    "salary": "$0 - $0 USD",
-    "job_url": "https://remoteOK.com/remote-jobs/remote-aprio-ph-people-operations-coordinator-aprio-1131157",
-    "description": "Work with a nationally ranked CPA and advisory firm that is passionate for what's next. Aprio has 30 U.S. office locations, one in the Philippines and more than 2,100 team members that speak 60+ languages across the globe. By bringing together proven expertise, deep understanding, and strategic foresight for fast-growing industries, Aprio ensures clients are prepared for wherever life or business may take them. Discover a top-rated culture, vast growth opportunities and your next big career move with Aprio.<br><span style=\"font-size: 16px;\">Join</span><strong style=\"font-size: 16px;\"> Aprio's Business Operations - People &amp; Culture</strong><span style=\"font-size: 16px;\">&nbsp;and&nbsp;you will help clients maximize their opportunities.&nbsp;Aprio&nbsp;is a progressive, fast-growing firm looking for&nbsp;a</span><strong style=\"font-size: 16px;\"> People Operations Coordinator </strong><span style=\"font-size: 16px;\">to join their dynamic team.&nbsp;</span>\\n"
-  },
-  {
-    "id": 29,
-    "title": "Product Designer",
-    "company": "Bjak ",
-    "location": "Remote",
-    "salary": "$0 - $0 USD",
-    "job_url": "https://remoteOK.com/remote-jobs/remote-product-designer-bjak-1131156",
-    "description": "<h1><strong>Product Designer \u00e2\u0080\u0093 Design Seamless, Smart, and Scalable Experiences </strong><br /></h1><p style=\"min-height:1.5em\"><strong>About BJAK</strong><p style=\"min-height:1.5em\">BJAK is Southeast Asia\u00e2\u0080\u0099s largest digital insurance and financial services platform. Headquartered in Malaysia with operations in Thailand, Taiwan, and Japan, we help millions of users access affordable, transparent, and simplified financial products through <a target=\"_blank\" rel=\"noopener noreferrer nofollow\" href=\"http://Bjak.com\">Bjak.com</a>.<p style=\"min-height:1.5em\">Our proprietary technologies\u00e2\u0080\u0094from custom APIs to AI-powered engines\u00e2\u0080\u0094make complex services like insurance and investments accessible, intuitive, and fast.<p style=\"min-height:1.5em\"><strong>Join us from London (remote-friendly) and help shape product experiences used by millions.</strong><br /><p style=\"min-height:1.5em\"><strong>Why This Role Matters</strong><ul style=\"min-height:1.5em\"><li><p style=\"min-height"
-  },
-  {
-    "id": 30,
-    "title": "Director AI",
-    "company": "Syner-G",
-    "location": "Remote",
-    "salary": "$0 - $0 USD",
-    "job_url": "https://remoteOK.com/remote-jobs/remote-director-ai-syner-g-1131155",
-    "description": "<strong><u>COMPANY DESCRIPTION:</u></strong>\u00c2\u00a0\nA career here is life-enhancing.\nAt Syner-G, we enable our people to build careers that impact positively on their quality of life. Through our expertise, insight, consulting and management skills, we accelerate breakthrough science and delivery of life-enhancing therapies to more patients. We work across a diverse range of clients and projects, supporting many organizations from the most critical phases of the drug discovery and approval process through to commercialization. It is meaningful, varied and thought-provoking work with a strategic emphasis, a solutions-driven approach and significant, real-world outcomes, from science to delivery/success. To learn more about who we are and what drives us, watch our company video <a href=\"https://www.youtube.com/watch?v=2rUMvtncuw8\"><strong>here</strong></a>.\u00c2\u00a0\nUnderpinning this mission is a culture that aligns perfectly with what we want to achieve. We enable our people"
-  },
-  {
-    "id": 31,
-    "title": "Senior Manager International Sales",
-    "company": "BambooHR",
-    "location": "Remote",
-    "salary": "$0 - $0 USD",
-    "job_url": "https://remoteOK.com/remote-jobs/remote-senior-manager-international-sales-bamboohr-1131154",
-    "description": "<em>Please Note: This is a remote position available in London, England. An offer of employment is conditional upon completing appropriate pre-employment checks.</em>\n<strong>Essential Job Duties:</strong>\nBambooHR is entering an exciting phase of global growth, and the Senior Manager, International Sales (EMEA) will play a pivotal role in shaping BambooHR's future. While our US-based team has supported international sales to date, this is our first sales leadership role supporting sales in-region\u00e2\u0080\u0094giving you the opportunity to help build our EMEA commercial foundation from the ground up.\nThis is more than a regional leadership role. You'll define how we win in EMEA\u00e2\u0080\u0094translating BambooHR's proven US playbook into a scalable, repeatable motion tailored to the nuances of European markets.\nYou'll partner closely with the in-region Director of EMEA Marketing and cross-functional leaders across BambooHR to build a high-impact go-to-market engine, while actin"
-  },
-  {
-    "id": 32,
-    "title": "Technical Support Analyst",
-    "company": "Yuno",
-    "location": "Remote",
-    "salary": "$0 - $0 USD",
-    "job_url": "https://remoteOK.com/remote-jobs/remote-technical-support-analyst-yuno-1131151",
-    "description": "<p style=\"line-height: 1.8; margin-top: 12pt; margin-bottom: 12pt;\"><strong><span style=\"font-size: 9pt; font-family: Arial, sans-serif; color: #999999;\">Remote, LATAM, Full Time, Individual Contributor, +1 year of experience</span></strong>\n<hr>\n<p style=\"line-height: 1.8; margin-top: 12pt; margin-bottom: 12pt;\"><strong><span style=\"font-size: 17pt; font-family: Arial, sans-serif;\">Who We Are</span></strong>\n<p style=\"line-height: 1.8; margin-top: 12pt; margin-bottom: 12pt;\"><span style=\"font-size: 11pt; font-family: Arial, sans-serif;\">At Yuno, we are building the payment infrastructure that allows all companies to participate in the global market. Founded by seasoned experts from the payments and tech industries, our technology provides access to leading payment capabilities, enabling companies to engage customers confidently and maintain global operations through seamless integrations. We empower high-performing teams at brands like InDrive, McDonald's, Rappi, and Viva Aero"
-  },
-  {
-    "id": 33,
-    "title": "Director Revenue Transformation",
-    "company": "Gong.io",
-    "location": "Remote",
-    "salary": "$0 - $0 USD",
-    "job_url": "https://remoteOK.com/remote-jobs/remote-director-revenue-transformation-gong-io-1131150",
-    "description": "Gong harnesses the power of AI to transform how revenue teams win. The Gong Revenue AI Operating System unifies data, insights, and workflows into a single, trusted system that observes, guides, and acts alongside the world's most successful revenue teams. Powered by the Gong Revenue Graph, AI-powered intelligence, specialized agents, and trusted applications, Gong helps more than 5,000 companies around the world deeply understand their teams and customers, automate critical sales workflows, and close more deals with less effort. For more information, visit www.gong.io.\n\nAt Gong, you will join a company built on innovative products, ambitious goals, and passionate people. We are shaping the future of revenue intelligence and we want people who are excited to build what comes next. You will work with a team that dreams big, moves fast, and cares deeply about the craft and about each other. Here, transparency and trust are core to how we operate, and every person has the opportunity to m"
-  },
-  {
-    "id": 34,
-    "title": "Account Executive",
-    "company": "GuidePoint Security",
-    "location": "Remote",
-    "salary": "$0 - $0 USD",
-    "job_url": "https://remoteOK.com/remote-jobs/remote-account-executive-guidepoint-security-1131149",
-    "description": "GuidePoint Security provides trusted cybersecurity expertise, solutions and services that help organizations make better decisions and minimize risk. By taking a three-tiered, holistic approach for evaluating security posture and ecosystems, GuidePoint enables some of the nation's top organizations, such as Fortune 500 companies and U.S. government agencies, to identify threats, optimize resources and integrate best-fit solutions that mitigate risk.\n\nThe ideal Account Executive will pro-actively network, cold call, and sell to multiple contacts within an organization, including \"C\" levels. This person will manage and develop relationships with customers and provide a consultative sales approach that delivers the highest level of account management services.  The Account Executive should share the goals and concerns of the client and understand the technology partner and products available to meet their goals and solve their challenges.  This position is virtual/remote with regional tra"
-  },
-  {
-    "id": 35,
-    "title": "Partner Development Director",
-    "company": "Clozd",
-    "location": "Remote",
-    "salary": "$0 - $0 USD",
-    "job_url": "https://remoteOK.com/remote-jobs/remote-partner-development-director-clozd-1131148",
-    "description": "Clozd is the leader in <strong>Decision Intelligence</strong>\u00e2\u0080\u0094helping companies uncover the truth by capturing direct feedback throughout the customer journey.\n<br aria-hidden=\"true\">We believe most revenue organizations are operating without the full picture. CRM and call data only tell part of the story. Clozd delivers the missing truth layer\u00e2\u0080\u0094giving executives the insights they need to improve win rates, retention, and growth.\n&nbsp;\nWe need team members who can tackle ambiguity, solve complex problems, and delight customers. We hire dynamic employees who take initiative, find ways to simplify and scale, possess strong interpersonal and communication skills, value humility and learning,&nbsp;crave a fast-paced startup environment and never compromise their integrity.<br>We are hiring a <strong>Partner Development Director </strong>to build and scale a strategic partnerships function that positions Clozd as an embedded infrastructure layer acr"
-  },
-  {
-    "id": 36,
-    "title": "Test Automation Engineer",
-    "company": "540",
-    "location": "Remote",
-    "salary": "$0 - $0 USD",
-    "job_url": "https://remoteOK.com/remote-jobs/remote-test-automation-engineer-540-1131147",
-    "description": "540 is seeking a Test Automation Engineer to support the DoW in building a next-generation Air Force aircraft maintenance application powered by Angular, Apigee, Kubernetes, and Google Cloud. Test Engineers on this team design and implement automated tests to ensure the platform performs reliably as it supports Air Force maintenance operations. You'll work closely with engineers, architects, and product stakeholders to validate system integrations, improve test coverage, and ensure the platform operates reliably across distributed systems and services.\n\nThis role is offered as a contract engagement and is ideal for engineers who value flexibility, autonomy, and high-impact work. While there may be an opportunity to convert to full-time in the future, conversion is not guaranteed and is dependent on program needs.\n\n<strong>Location</strong>: Remote within the continental United States, East Coast working hours<br><strong>Citizenship &amp; Clearance Requirement</strong>: per client requi"
-  },
-  {
-    "id": 37,
-    "title": "Product Manager",
-    "company": "Lively",
-    "location": "Remote",
-    "salary": "$0 - $0 USD",
-    "job_url": "https://remoteOK.com/remote-jobs/remote-product-manager-lively-1131146",
-    "description": "<div><strong>About Lively</strong>\n<span style=\"font-weight: 400;\">Lively set out to raise the bar on benefit solutions, because we believe no one should have to sacrifice personal wellness for financial wellness. While traditional benefits focus more on transactions and less on the humans using them, Lively harnesses user-centric design and innovative technology to deliver an effortless experience for employers and account holders alike. Our modern HSA is consistently top-rated, and we have since expanded our offerings to provide a full suite of other benefits and services for companies, consumers, and financial institutions.</span>\n<span style=\"font-weight: 400;\">Lively is a remote-first company, headquartered in San Francisco with employees across the US. Come join us and help make getting the value out of your benefits as simple as it should be.</span></div><div>ABOUT LIVELY&nbsp;\nLively is a leading health savings and benefits platform built for toda"
-  },
-  {
-    "id": 38,
-    "title": "Senior Solutions Architect",
-    "company": "540",
-    "location": "Remote",
-    "salary": "$0 - $0 USD",
-    "job_url": "https://remoteOK.com/remote-jobs/remote-senior-solutions-architect-540-1131145",
-    "description": "540 is seeking a Senior Solutions Architect to support our partnership with Google and the DoW in building new capabilities for an Air Force integration platform. This platform leverages Google Cloud, Apigee, and Kubernetes to enable scalable, secure, and mission-critical systems. \n\nIn this role, you will lead technical architecture efforts and drive the design and delivery of complex, distributed systems. A key focus of this work is enabling disconnected operations (offline-first) capabilities that ensure platform reliability and continuity in degraded or low-connectivity environments supporting Air Force operations.\n\n<strong>Location</strong>: Remote within the continental United States<br><strong>Citizenship &amp; Clearance Requirement</strong>: per client requirements, candidates must be a U.S. Citizen with the ability to obtain a DoD Secret clearance<br><strong>Education Requirement: </strong>Bachelor\u00e2\u0080\u0099s Degree in Computer Science or related engineering field (preferred)<br><stro"
-  },
-  {
-    "id": 39,
-    "title": "CNAPP Security Engineer Mid Atlantic region",
-    "company": "GuidePoint Security",
-    "location": "Remote",
-    "salary": "$0 - $0 USD",
-    "job_url": "https://remoteOK.com/remote-jobs/remote-cnapp-security-engineer-mid-atlantic-region-guidepoint-security-1131144",
-    "description": "GuidePoint Security provides trusted cybersecurity expertise, solutions and services that help organizations make better decisions and minimize risk. By taking a three-tiered, holistic approach for evaluating security posture and ecosystems, GuidePoint enables some of the nation\u00e2\u0080\u0099s top organizations, such as Fortune 500 companies and U.S. government agencies, to identify threats, optimize resources and integrate best-fit solutions that mitigate risk.\n\nGuidePoint Security seeks an experienced and driven CNAPP cloud security professional to join our DevSecOps Security practice in the Mid-Atlantic.\n\nNote: This is a remote position, but candidates living in our Mid-Atlantic region (VA, MD, PA, NC, DE, NJ, or DC) are highly preferred.\n\nSummary\u00c2\u00a0\n\nAs a\u00c2\u00a0CNAPP Security Engineer, you will be part of a growing team of highly skilled cybersecurity experts providing delivery services for customers in several verticals.\u00c2\u00a0 Your primary responsibilities revolve around partnering with our customers "
-  },
-  {
-    "id": 40,
-    "title": "Travel & Visa Manager",
-    "company": "Eqvilent",
-    "location": "Remote",
-    "salary": "$0 - $0 USD",
-    "job_url": "https://remoteOK.com/remote-jobs/remote-travel-visa-manager-eqvilent-1131143",
-    "description": "We are looking for a Travel&Visa Manager responsible for managing all aspects of travel, including flights, accommodations, and visas, for our company employees.\n\nWHAT YOU'LL BE DOING:\n\u00e2\u0080\u00a2 Coordinate and manage travel arrangements for employees, including flights, hotels, transportation, and visas\n\u00e2\u0080\u00a2 Stay updated on visa requirements and immigration laws in different countries\n\u00e2\u0080\u00a2 Ensure compliance with immigration regulations and maintain accurate records\n\u00e2\u0080\u00a2 Liaise with government officials and external organizations regarding visa applications and travel requirements\n\u00e2\u0080\u00a2 Provide support and guidance to employees throughout the visa application process\n\u00e2\u0080\u00a2 Continuously review and improve travel processes and procedures to enhance efficiency and cost-effectiveness\n\u00e2\u0080\u00a2 Handle any escalated travel-related issues and resolve them on time\n\nWHAT WE LOOK FOR IN YOU:\n\u00e2\u0080\u00a2 At least 3 years of experience in travel planning and visa organization\n\u00e2\u0080\u00a2 Knowledge of visa requirements and immigratio"
-  },
-  {
-    "id": 41,
-    "title": "Paralegal Legal Operations",
-    "company": "Sterlington, PLLC",
-    "location": "Remote",
-    "salary": "$0 - $0 USD",
-    "job_url": "https://remoteOK.com/remote-jobs/remote-paralegal-legal-operations-sterlington-pllc-1131142",
-    "description": "<strong>Paralegal, Legal Operations & Outsourcing</strong>\n<strong>Location: </strong>Remote - Central or South America<br><strong>Contract: </strong>Independent Contractor\n<strong>About Sterlington</strong>\nSterlington PLLC is a full-service law firm advising on complex corporate, litigation, executive compensation, and private wealth matters. Our approach goes beyond traditional legal advice\u00e2\u0080\u0094we focus equally on the economic realities of our clients' businesses.\nWe work with founders, senior executives, ultra-high-net-worth individuals, and leading companies on sophisticated, high-impact matters. Our model is lean, collaborative, and partner-led, offering meaningful exposure and responsibility from day one.\n<strong>The Opportunity</strong>\nWe are looking for a detail-oriented and analytically minded Paralegal to join our Legal Operations & Outsourcing team.\nThis role is centered on two core areas:\n<ol>\n<li>Analyzing contracts t"
-  },
-  {
-    "id": 42,
-    "title": "Retail Strategic Associate",
-    "company": "Rowan",
-    "location": "Remote",
-    "salary": "$0 - $0 USD",
-    "job_url": "https://remoteOK.com/remote-jobs/remote-retail-strategic-associate-rowan-1131141",
-    "description": "At Rowan, we are all about making ear piercing experiences a celebration full of joy! Rowan is an innovative ear-piercing and hypoallergenic jewelry brand that brings safety to the forefront with our team of licensed nurses \u00e2\u0080\u0093 and celebration to every customer with our joyful approach to piercings and jewelry. Our priority is to offer a fun, celebratory, and safe ear piercing experience for everyone. When we say piercing for all, we mean it. <i>Everybody</i> is invited to this ear party!&nbsp;<br>\n<p style=\"margin-top: 12pt; margin-bottom: 12pt;\"><span style=\"font-size: 11pt; font-family: 'Helvetica Neue', sans-serif;\">The Retail Strategy Associate plays a key supporting role within the retail field organization, reporting to the Chief Revenue Officer (CRO) and to the Chief of Staff (dotted), who partners closely on strategic frameworks, analysis, and initiatives that drive business performance.</span>\n<p style=\"margin-top: 12pt; margin-bottom: 12pt;\"><span st"
-  },
-  {
-    "id": 43,
-    "title": "Service Operations Scheduler",
-    "company": "Palmetto Clean Technology",
-    "location": "Remote",
-    "salary": "$0 - $0 USD",
-    "job_url": "https://remoteOK.com/remote-jobs/remote-service-operations-scheduler-palmetto-clean-technology-1131140",
-    "description": "<div><strong>Company Description</strong>\nPalmetto is a leading clean tech company on a mission to accelerate the transition to a clean energy future. With a belief that consumers can <strong>have it all, </strong>we are an uncompromising energy company that makes coming clean a no brainer. Our award-winning technology platform empowers homeowners, businesses, and entrepreneurs to adopt renewable energy through simple, scalable, and innovative solutions. Operating at the intersection of B2B and D2C, we offer software, financial products, and services that drive real environmental impact\u00e2\u0080\u0094without compromising value. We deliver end-to-end solutions for whole home electrification that put clean energy within reach for all.&nbsp;\nOur employees are our most valuable resource. We foster a promote-from-within culture that prioritizes talent development, career growth, and purpose-driven work. Palmetto offers a comprehensive benefits package\u00e2\u0080\u0094including unlimited PTO, medical"
-  },
-  {
-    "id": 44,
-    "title": "Regulatory Manager Senior Regulatory Manager",
-    "company": "Precision Medicine Group",
-    "location": "Remote",
-    "salary": "$0 - $0 USD",
-    "job_url": "https://remoteOK.com/remote-jobs/remote-regulatory-manager-senior-regulatory-manager-precision-medicine-group-1131139",
-    "description": "Precision for Medicine is not your typical CRO.  At Precision for Medicine we have brought together new technologies, expertise and operational scale to help the life sciences improve the speed, cost and success rate of bringing life-changing therapies to patients.  What sets us apart is the way we integrate clinical trial execution with deep scientific knowledge, laboratory expertise and advanced data sciences. We have a strong focus on Oncology and Rare Disease.\n\nPrecision for Medicine are recruiting a Regulatory Manager / Senior Regulatory Manager (depending on experience) to join our team.\n\nThe Regulatory Manager provides regulatory strategy and development guidance for optimal conduct of clinical trials, regulatory agency meetings, orphan designations, paediatric planning, and accelerated procedures, ensuring timely preparation of well organized, quality regulatory submissions in compliance with applicable regulations. The Regulatory Manager coordinates and prepares regulatory doc"
-  },
-  {
-    "id": 45,
-    "title": "Manager Product Analytics",
-    "company": "Pinwheel",
-    "location": "Remote",
-    "salary": "$0 - $0 USD",
-    "job_url": "https://remoteOK.com/remote-jobs/remote-manager-product-analytics-pinwheel-1131138",
-    "description": "<div><h2><strong>Pinwheel - Building the future of financial services in partnership with the biggest brands</strong></h2>\n\"I love my banking app!\" said no one, ever.\nPinwheel is on a mission to change that. We believe banks and financial service providers represent the greatest opportunity to build 10x better experiences, especially in the AI age. We're building the next generation of financial products alongside some of the biggest names in the market including Robinhood, DoorDash, Credit Karma, American Express, Discover, Intuit, Acorns, Visa and more.&nbsp;\nIf you're excited by the idea of having your work touch and impact the lives of hundreds of millions of consumers, Pinwheel is the place for you.&nbsp;\nIf you get stoked about building products alongside the biggest brands in the world, Pinwheel is the place for you.&nbsp;\nIf you want to join a scrappy, hustling team that is obsessed with defining the future of financial services, Pinwheel is the p"
-  },
-  {
-    "id": 46,
-    "title": "Retail Store Associate",
-    "company": "Rowan",
-    "location": "Remote",
-    "salary": "$0 - $0 USD",
-    "job_url": "https://remoteOK.com/remote-jobs/remote-retail-store-associate-rowan-1131137",
-    "description": "<strong style=\"font-size: 11pt;\">About This Role:</strong>\n&nbsp;\n<span style=\"font-size: 11pt;\">We are looking for an enthusiastic, customer-obsessed Studio Sales Associate to join our team in our <strong>Butler </strong></span><strong style=\"font-size: 11pt;\">Town Center&nbsp;</strong><span style=\"font-size: 11pt;\">&nbsp;studio location. You will be responsible for creating an exceptional piercing and shopping experience for our customers in a genuine and enthusiastic manner, supporting the team on the weekends. This position involves assisting customers with ear piercings, providing product recommendations, and ensuring the studio maintains Rowan\u00e2\u0080\u0099s high standards of cleanliness and safety. Your responsibility is to infuse the Rowan experience, bring brand awareness, product knowledge and the art of ear stacking to life, through engaging customer interactions. This is an hourly, non-exempt position, reporting to the Studio Manager.</span>\n&nbsp;\n<stro"
-  },
-  {
-    "id": 47,
-    "title": "Business Development Manager Real World Data",
-    "company": "Glooko",
-    "location": "Remote",
-    "salary": "$0 - $0 USD",
-    "job_url": "https://remoteOK.com/remote-jobs/remote-business-development-manager-real-world-data-glooko-1131136",
-    "description": "<strong>Business Development Manager, Real-World Data</strong>\nGlooko is focused on helping health systems address the growing challenges of glycemic safety and diabetes management across the care continuum. With the acquisition of Monarch Medical Technologies, a Glooko Company, Glooko is uniquely positioned to be the enterprise partner of choice for healthcare providers seeking to reduce glycemic risk, improve safety, and support overburdened clinical teams with coordinated expertise across both outpatient and inpatient care settings. Glooko\u00e2\u0080\u0099s comprehensive diabetes management platform supports clinical workflow optimization and improved outcomes in the outpatient setting, while EndoTool-developed by Monarch Medical Technologies-is an FDA-cleared Class II medical device that provides patient-specific insulin dosing for hospitals. Learn more at<a href=\"http://www.glooko.com\"> www.glooko.com</a>.\n<strong>What does a Business Development Manager, Real-World Data do at "
-  },
-  {
-    "id": 48,
-    "title": "Piercing Studio Nurse",
-    "company": "Rowan",
-    "location": "Remote",
-    "salary": "$0 - $0 USD",
-    "job_url": "https://remoteOK.com/remote-jobs/remote-piercing-studio-nurse-rowan-1131135",
-    "description": "At Rowan, we are all about making ear piercing experiences a celebration full of joy! Rowan is an innovative ear-piercing and hypoallergenic jewelry brand that brings safety to the forefront with our team of licensed nurses \u00e2\u0080\u0093 and celebration to every customer with our joyful approach to piercings and jewelry. Our priority is to offer a fun, celebratory, and safe ear piercing experience for everyone. When we say piercing for all, we mean it. <i>Everybody</i> is invited to this ear party!&nbsp;<br><strong style=\"font-size: 11pt;\">About This Role:</strong>\n&nbsp;\n<span style=\"font-size: 11pt;\">Rowan's Piercing Studio Nurse, reporting to the Studio Manager, is dedicated to providing a safe, clean, and joyful ear-piercing experience. As a Rowan Nurse you will leverage your highly respected nursing skills and expertise to perform piercings with the utmost care and precision. Nurses are our skin-saving, infection-fighting, and customer-calming superheroes \u00e2\u0080\u0093 "
-  },
-  {
-    "id": 49,
-    "title": "Director of Content Marketing &amp; Media",
-    "company": "Luxury Presence",
-    "location": "Remote",
-    "salary": "$0 - $0 USD",
-    "job_url": "https://remoteOK.com/remote-jobs/remote-director-of-content-marketing-amp-media-luxury-presence-1131121",
-    "description": "<span style=\"font-size: 16px\">Luxury Presence is building the AI growth platform for real estate. Backed by Bessemer Venture Partners and other top investors, we're a Series C company on track to hit $100M in annual recurring revenue in the next six months. More than 87,000 real estate professionals, including over </span><span style=\"font-size: 16px;\">30% of the WSJ Real Trends top 100 agents in the United States, use us to run and grow their business.</span><br>\n<h2><strong>Here\u00e2\u0080\u0099s why we are excited about this opportunity:</strong></h2>\nLuxury Presence is the leading growth platform in real estate, and we are investing in the content and media engine to match. We are building a first-of-its-kind media arm inside a high-growth, venture-backed SaaS company at a moment when brand, distribution, and industry authority are becoming the most durable competitive advantages in technology. This role is at the center of that investment.\nAs <strong>the Di"
-  },
-  {
-    "id": 50,
-    "title": "Banking Full Stack Software Developer TSCM 43657",
-    "company": "Eleks",
-    "location": "Remote",
-    "salary": "$0 - $0 USD",
-    "job_url": "https://remoteOK.com/remote-jobs/remote-banking-full-stack-software-developer-tscm-43657-eleks-1131120",
-    "description": "\nELEKS&nbsp;<a href=\"https://careers.eleks.com/about/software-engineering-development-office/\">Software Engineering and Development Office </a>is looking for a Senior Full-Stack (.NET + Angular) Developer in Poland, Croatia or Ukraine.\n<h4>ABOUT PROJECT</h4>\nOur client is a US-based leading national services and online solutions provider to community banks and credit unions.\n\\n<br>REQUIREMENTS<div>\n<ul>\n<li>7+ years of professional software engineering experience with a strong focus on .NET</li>\n<li>Proven expertise in ASP.NET MVC, .NET Core / .NET 6+, and building production-grade web applications and RESTful APIs</li>\n<li>Strong JavaScript skills, specifically with the Angular framework</li>\n<li>Hands-on experience with Azure, including Functions, App Services, Data Factory, Logic Apps, and Fabric</li>\n<li>SQL experience, including writing and performance tuning of complex queries and stored procedures will be a plus</li>\n<li>Strong un"
-  },
-  {
-    "id": 51,
-    "title": "Senior Solutions Architect",
-    "company": "Google",
+    "title": "Software Engineer",
+    "company": "Infosys",
     "location": "Bangalore, India",
-    "salary": "₹40,00,000 - ₹70,00,000",
-    "job_url": "https://www.google.com/about/careers",
-    "description": "Building next-generation cloud solutions for enterprise clients in India and beyond."
+    "salary": "₹8-15 LPA",
+    "job_url": "https://www.linkedin.com/jobs/view/software-engineer-infosys-bangalore",
+    "description": "Build and maintain scalable enterprise applications using Python, Java, and cloud-native services while collaborating with product and QA teams."
   },
   {
-    "id": 52,
-    "title": "Staff Engineer - Infrastructure",
-    "company": "Amazon",
+    "title": "Full Stack Developer",
+    "company": "TCS",
+    "location": "Mumbai, India",
+    "salary": "₹10-18 LPA",
+    "job_url": "https://www.linkedin.com/jobs/view/full-stack-developer-tcs-mumbai",
+    "description": "Develop React and Node.js features for customer-facing platforms, integrate REST APIs, and improve performance across web applications."
+  },
+  {
+    "title": "Data Analyst",
+    "company": "Wipro",
     "location": "Hyderabad, India",
-    "salary": "₹35,00,000 - ₹55,00,000",
-    "job_url": "https://amazon.jobs",
-    "description": "Designing and implementing highly scalable distributed systems for Amazon Web Services."
+    "salary": "₹6-12 LPA",
+    "job_url": "https://www.linkedin.com/jobs/view/data-analyst-wipro-hyderabad",
+    "description": "Analyze business datasets, create dashboards in Power BI, and deliver insights that support operations, finance, and growth teams."
   },
   {
-    "id": 53,
-    "title": "Lead Software Engineer",
-    "company": "Stripe",
-    "location": "Global Remote",
-    "salary": "$170,000 - $260,000 USD",
-    "job_url": "https://remoteok.com",
-    "description": "Join the team building the economic infrastructure for the internet. This is a globally remote position."
+    "title": "Backend Developer",
+    "company": "Zomato",
+    "location": "Pune, India",
+    "salary": "₹12-20 LPA",
+    "job_url": "https://www.linkedin.com/jobs/view/backend-developer-zomato-pune",
+    "description": "Design resilient microservices, optimize database queries, and support high-traffic backend systems for ordering and logistics workflows."
   },
   {
-    "id": 54,
-    "title": "Product Design Lead",
-    "company": "Airbnb",
-    "location": "Global Remote",
-    "salary": "$150,000 - $230,000 USD",
-    "job_url": "https://remoteok.com",
-    "description": "Help design the future of travel and belonging. Work from anywhere in the world."
+    "title": "DevOps Engineer",
+    "company": "Swiggy",
+    "location": "Chennai, India",
+    "salary": "₹14-22 LPA",
+    "job_url": "https://www.linkedin.com/jobs/view/devops-engineer-swiggy-chennai",
+    "description": "Manage CI/CD pipelines, Kubernetes deployments, and observability tooling to improve release velocity and platform reliability."
+  },
+  {
+    "title": "Software Engineer",
+    "company": "Razorpay",
+    "location": "Bangalore, India",
+    "salary": "₹15-24 LPA",
+    "job_url": "https://www.linkedin.com/jobs/view/software-engineer-razorpay-bangalore",
+    "description": "Build payment infrastructure features, write robust backend services, and collaborate with security and product teams on fintech workflows."
+  },
+  {
+    "title": "Backend Developer",
+    "company": "Zepto",
+    "location": "Mumbai, India",
+    "salary": "₹13-21 LPA",
+    "job_url": "https://www.linkedin.com/jobs/view/backend-developer-zepto-mumbai",
+    "description": "Implement APIs for rapid-commerce systems, improve service performance, and support distributed systems handling real-time inventory and delivery."
+  },
+  {
+    "title": "Full Stack Developer",
+    "company": "CRED",
+    "location": "Remote, India",
+    "salary": "₹16-26 LPA",
+    "job_url": "https://www.linkedin.com/jobs/view/full-stack-developer-cred-remote-india",
+    "description": "Ship end-to-end product experiences with React, TypeScript, and Python services while working closely with design and growth teams."
+  },
+  {
+    "title": "Data Analyst",
+    "company": "PhonePe",
+    "location": "Bangalore, India",
+    "salary": "₹9-16 LPA",
+    "job_url": "https://www.linkedin.com/jobs/view/data-analyst-phonepe-bangalore",
+    "description": "Model transactional data, monitor KPI trends, and create reporting pipelines that support product, risk, and operations stakeholders."
+  },
+  {
+    "title": "DevOps Engineer",
+    "company": "Meesho",
+    "location": "Hyderabad, India",
+    "salary": "₹12-20 LPA",
+    "job_url": "https://www.linkedin.com/jobs/view/devops-engineer-meesho-hyderabad",
+    "description": "Automate infrastructure, strengthen deployment workflows, and maintain scalable cloud environments supporting e-commerce platform growth."
   }
 ]

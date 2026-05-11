@@ -12,6 +12,8 @@ router = APIRouter(prefix="/api", tags=["Compatibility"])
 
 # In-memory storage for the session
 resume_store = {}
+job_matches_store = {}
+applications_store = []
 
 class ResumeUploadRequest(BaseModel):
     filename: str
@@ -26,6 +28,28 @@ class ATSAnalyzeRequest(BaseModel):
 
 class FetchJobsRequest(BaseModel):
     resume_id: int
+
+
+class AutoApplyRequest(BaseModel):
+    job_match_ids: List[int]
+    resume_id: int
+
+
+def get_saved_matches_for_resume(resume_id: Optional[int]) -> List[dict]:
+    if resume_id is not None:
+        direct = job_matches_store.get(resume_id)
+        if direct:
+            return direct
+
+        string_matched = next(
+            (matches for key, matches in job_matches_store.items() if str(key) == str(resume_id) and matches),
+            None
+        )
+        if string_matched:
+            return string_matched
+
+    latest_non_empty = next((matches for matches in reversed(list(job_matches_store.values())) if matches), [])
+    return latest_non_empty
 
 @router.post("/resumes")
 async def upload_resume(request: ResumeUploadRequest):
@@ -116,7 +140,8 @@ async def compatibility_fetch_jobs(request: FetchJobsRequest):
         frontend_jobs = []
         for i, match in enumerate(scored_matches):
             frontend_jobs.append({
-                "id": i + 1,
+                "id": int(f"{request.resume_id}{i + 1}"),
+                "resume_id": request.resume_id,
                 "job_title": match.title,
                 "company": match.company,
                 "location": match.location,
@@ -130,9 +155,12 @@ async def compatibility_fetch_jobs(request: FetchJobsRequest):
                 "date_posted": datetime.now().isoformat(),
                 "domain": domain,
             })
-            
+
+        job_matches_store[request.resume_id] = frontend_jobs
+
         return {
             "jobs": frontend_jobs,
+            "saved_matches": frontend_jobs,
             "live_job_count": len(frontend_jobs),
             "search_link_count": 0,
             "detected_domain": domain,
@@ -143,3 +171,63 @@ async def compatibility_fetch_jobs(request: FetchJobsRequest):
             raise e
         print(f"[COMPAT ERROR] /fetch-real-jobs: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/job-matches")
+async def compatibility_get_job_matches(resume_id: Optional[int] = None):
+    if resume_id is None:
+        all_matches = []
+        for matches in job_matches_store.values():
+            all_matches.extend(matches)
+        return all_matches
+    return get_saved_matches_for_resume(resume_id)
+
+
+@router.get("/applications")
+async def compatibility_get_applications():
+    return applications_store
+
+
+@router.post("/auto-apply")
+@router.post("/auto-apply-real")
+async def compatibility_auto_apply(request: AutoApplyRequest):
+    if not request.job_match_ids or not request.resume_id:
+        raise HTTPException(status_code=400, detail="Missing job_match_ids array or resume_id")
+
+    available_jobs = get_saved_matches_for_resume(request.resume_id)
+    if not available_jobs:
+        raise HTTPException(status_code=404, detail="No saved job matches found for this resume")
+
+    results = []
+    for index, job_id in enumerate(request.job_match_ids):
+        job = next((item for item in available_jobs if str(item.get("id")) == str(job_id)), None)
+        if not job:
+            results.append({
+                "job_match_id": job_id,
+                "success": False,
+                "message": "Job match not found"
+            })
+            continue
+
+        application_id = int(datetime.now().timestamp() * 1000) + index
+        applied_at = datetime.now().isoformat()
+        applications_store.insert(0, {
+            "id": application_id,
+            "job_match_id": job_id,
+            "resume_id": request.resume_id,
+            "job_title": job["job_title"],
+            "company": job["company"],
+            "portal": job.get("portal", "direct"),
+            "status": "applied",
+            "applied_at": applied_at,
+            "created_at": applied_at,
+            "error_message": None
+        })
+        results.append({
+            "job_match_id": job_id,
+            "application_id": application_id,
+            "success": True,
+            "message": f"Applied to {job['job_title']} at {job['company']}"
+        })
+
+    return {"success": True, "results": results}

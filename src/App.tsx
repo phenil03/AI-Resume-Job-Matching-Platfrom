@@ -125,6 +125,7 @@ function App() {
 
   const handleResumeUploaded = (resume: Resume) => {
     setSelectedResume(resume);
+    setAtsScore(null);
     setCurrentStep('ats');
   };
 
@@ -167,10 +168,13 @@ function App() {
     setUser(null);
     localStorage.removeItem('user');
     setCurrentStep('upload');
+    setSelectedResume(null);
+    setAtsScore(null);
   };
 
   const currentStepIndex = steps.findIndex(step => step.id === currentStep);
   const completionPercent = Math.round(((currentStepIndex + 1) / steps.length) * 100);
+  const completedMilestones = currentStepIndex;
   const currentPhaseLabel =
     currentStep === 'upload'
       ? 'Profile Initialization'
@@ -179,6 +183,15 @@ function App() {
         : currentStep === 'matches'
           ? 'Job Matching'
           : 'Application Automation';
+
+  const canNavigateToStep = (stepId: Step) => {
+    if (stepId === 'upload') return true;
+    if (!selectedResume) return false;
+    if (stepId === 'ats') return true;
+    if (stepId === 'matches') return atsScore !== null;
+    if (stepId === 'apply') return (atsScore ?? 0) >= 50;
+    return false;
+  };
 
   return (
     <div className="min-h-screen bg-[#f7f9f8] text-[#444444] selection:bg-[#0C7A5B]/20 selection:text-[#111111]">
@@ -193,28 +206,30 @@ function App() {
             </div>
 
             <div className="hidden items-center gap-10 md:flex">
-              {[
-                { id: 'ats', label: 'Analyze' },
-                { id: 'matches', label: 'Matches' },
-                { id: 'apply', label: 'Apply' }
-              ].map((item) => {
-                const isActive = currentStep === item.id;
-                return (
-                  <button
-                    key={item.id}
-                    onClick={() => {
-                      if (selectedResume) {
+                {[
+                  { id: 'ats', label: 'Analyze' },
+                  { id: 'matches', label: 'Matches' },
+                  { id: 'apply', label: 'Apply' }
+                ].map((item) => {
+                  const isActive = currentStep === item.id;
+                  const canOpen = canNavigateToStep(item.id as Step);
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => {
+                      if (canOpen) {
                         setCurrentStep(item.id as Step);
                       }
-                    }}
-                    className={`text-sm font-semibold transition-colors ${
-                      isActive ? 'text-[#0C7A5B]' : 'text-[#5F6E68] hover:text-[#0C7A5B]'
+                      }}
+                      disabled={!canOpen}
+                      className={`text-sm font-semibold transition-colors ${
+                      isActive ? 'text-[#0C7A5B]' : canOpen ? 'text-[#5F6E68] hover:text-[#0C7A5B]' : 'text-[#A7B7B0] cursor-not-allowed'
                     }`}
-                  >
-                    {item.label}
-                  </button>
-                );
-              })}
+                    >
+                      {item.label}
+                    </button>
+                  );
+                })}
             </div>
 
             <div className="flex items-center gap-3">
@@ -295,7 +310,7 @@ function App() {
                     <div>
                       <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#8ca198]">Progress</p>
                       <p className="mt-0.5 text-[12px] font-semibold leading-4 text-[#152129]">
-                        {currentStepIndex + 1} of {steps.length} milestones cleared
+                        {completedMilestones} of {steps.length} milestones cleared
                       </p>
                     </div>
                   </div>
@@ -315,21 +330,25 @@ function App() {
                     const isActive = currentStep === step.id;
                     const isCompleted = currentStepIndex > index;
                     const Icon = step.icon;
+                    const canOpen = canNavigateToStep(step.id as Step);
 
                     return (
                       <button
                         key={step.id}
                         onClick={() => {
-                          if (isCompleted || isActive) {
+                          if (canOpen && (isCompleted || isActive || step.id === 'upload')) {
                             setCurrentStep(step.id as Step);
                           }
                         }}
+                        disabled={!canOpen}
                         className={`group rounded-[12px] border p-4 text-left transition-all duration-300 ${
                           isActive
                             ? 'border-[#0c7a5b] bg-white shadow-[0_10px_28px_rgba(12,122,91,0.08)]'
                             : isCompleted
                               ? 'border-[#e7edea] bg-[#fbfcfc] hover:-translate-y-0.5 hover:shadow-[0_10px_24px_rgba(16,24,40,0.04)]'
-                              : 'border-[#eef2f0] bg-[#f8faf9] text-[#90a39a]'
+                              : canOpen
+                                ? 'border-[#eef2f0] bg-[#f8faf9] text-[#90a39a]'
+                                : 'border-[#eef2f0] bg-[#f8faf9] text-[#90a39a] cursor-not-allowed opacity-75'
                         }`}
                       >
                         <div className="mb-3 flex items-start justify-between gap-3">
